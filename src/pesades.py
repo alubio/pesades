@@ -1,6 +1,6 @@
 from pesades_main_ui import *
 
-__version__ = "0.1.a"
+__version__ = "0.1.1"
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, *args, **kwargs):
