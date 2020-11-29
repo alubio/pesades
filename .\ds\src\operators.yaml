@@ -1,0 +1,16 @@
+- !!python/object:__main__.Operator
+  create_date: 2020-11-27 13:13:51.520540
+  email: email
+  fullname: fullname
+  organization: organization
+  password: pass
+  phone: phone
+  username: username1
+- !!python/object:__main__.Operator
+  create_date: 2020-11-27 13:13:51.520640
+  email: email
+  fullname: fullname
+  organization: organization
+  password: pass
+  phone: phone
+  username: username2
