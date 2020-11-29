@@ -2,8 +2,8 @@
 """
 Operators info module
 """
-import datetime
-import yaml
+from datetime import datetime
+from yaml import full_load, dump
 from pesades_crypto import is_passwordok
 
 operators = []
@@ -13,12 +13,11 @@ class Operator():
     """Operator information"""
     def __init__(self, username, fullname, organization, phone, email, password):
         """Initializer"""
-        global last_id
         self.username = username
         """Operator's username"""
         self.fullname = fullname
         """Operator's fullname"""
-        self.create_date = datetime.datetime.now()
+        self.create_date = datetime.now()
         """Create date of the operator"""
         self.organization = organization
         """Operator's fullname"""
@@ -28,6 +27,8 @@ class Operator():
         """Operator's fullname"""
         self.password = password
         """Operator's hashed password"""
+
+        # Append newly created operator to operators list
         operators.append(self)
 
 def check_userpassword(username, password):
@@ -41,7 +42,7 @@ def save_operators():
     """Write operators list to file"""
     try:
         with open("src/ds/operators.yaml", 'w+') as file:
-            yaml.dump(operators, file)
+            dump(operators, file)
     except:
         # TODO Manage exception
         print ("ERROR: operators_ds: save_operators")
@@ -52,7 +53,7 @@ def load_operators():
     global operators
     try:
         with open("src/ds/operators.yaml") as file:
-            operators = yaml.full_load(file)
+            operators = full_load(file)
     except:
         # TODO Manage exception
         print ("ERROR: operators_ds: load_operators")

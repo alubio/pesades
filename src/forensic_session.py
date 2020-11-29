@@ -12,6 +12,8 @@ class ForensicSession():
 		"""Initializer"""
 		self.operator = None
 		"""Operator in charge of the investigation"""
+		self.case = None
+		"""Case in use"""
 		self.sessionlog = []
 		"""Session log"""
 

@@ -2,11 +2,14 @@
 """
 PESADES main module.
 """
+# Generic imports
+from re import match
+from time import sleep
+from datetime import datetime
+
 # Logging
 from logging import basicConfig, debug, warning, error, DEBUG, WARNING
 from PyQt5.QtCore import QRunnable, pyqtSlot, QThreadPool
-from time import sleep
-import datetime
 class Logger(QRunnable):
     """Logger thread"""
 
@@ -23,7 +26,7 @@ class Logger(QRunnable):
             if self.lastlogitem < len(fsession.sessionlog):
                 for m in fsession.sessionlog[self.lastlogitem:]:
                     self.lastlogitem += 1
-                    self.logdlg.addItem(str(datetime.datetime.now())+": "+m)
+                    self.logdlg.addItem(str(datetime.now())+": "+m)
             sleep(1)
 
 # GUI
@@ -38,6 +41,7 @@ from about_ui import *
 from yes_no_dialog_ui import *
 from info_dialog_ui import *
 from new_operator_ui import *
+from new_case_ui import *
 from password_dialog_ui import *
 
 def criticalmessage(message, title="PESADES"):
@@ -53,6 +57,7 @@ def criticalmessage(message, title="PESADES"):
 from forensic_session import *
 from pesades_crypto import *
 from operators_ds import *
+from cases_ds import *
 
 fsession = ForensicSession()
 fsession.log("Session created")
@@ -72,6 +77,56 @@ class AboutDlg(QDialog):
         """Change the verion label"""
         self.ui.Version.setText(_translate("About", "Version "+version))
 
+class NewCaseDlg(QDialog):
+    """New operator dialog"""
+    def __init__(self, parent=None):
+        """Initializer"""
+        super().__init__(parent)
+        self.ui = Ui_NewCase()
+        self.ui.setupUi(self)
+        self.ui.Name.setFocus()
+
+    def accept(self):
+        # Validate name
+        if len(self.ui.Name.text()) < 11:
+            criticalmessage("Invalid name, please use more than ten characters", "Validation error")
+            self.ui.Name.setFocus()
+            return
+        if self.ui.Name.text() == "testnotuse":
+            criticalmessage("Invalid username, please use another one", "Validation error")
+            self.ui.Name.setFocus()
+            return
+        # Validate description
+        if len(self.ui.Description.toPlainText()) < 11:
+            criticalmessage("Invalid description, please use more than ten characters", "Validation error")
+            self.ui.Description.setFocus()
+            return
+        # Validate notary name
+        if len(self.ui.Notary_name.text()) < 7:
+            criticalmessage("Invalid notary name, please use more than six characters", "Validation error")
+            self.ui.Notary_name.setFocus()
+            return
+        # Validate notary phone
+        if not match(r"\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$", self.ui.Notary_phone.text()):
+            criticalmessage("Invalid notary phone, please use international format (e.g. +34918808888)", "Validation error")
+            self.ui.Notary_phone.setFocus()
+            return
+        # Validate email
+        if not match(r"[^@]+@[^@]+\.[^@]+", self.ui.Notary_email.text()):
+            criticalmessage("Invalid notary email, please correct it", "Validation error")
+            self.ui.Notary_email.setFocus()
+            return
+
+        # Validation OK
+        # Store new case
+        result = store_case(self.ui.Name.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text())
+        if result == "OK":
+            fsession.log("Case "+self.ui.Name.text()+" created")
+            fsession.case = self.ui.Name.text()
+            super().accept()
+        else:
+            criticalmessage(result, "Validation error")
+
 class NewOperatorDlg(QDialog):
     """New operator dialog"""
     def __init__(self, parent=None):
@@ -81,10 +136,6 @@ class NewOperatorDlg(QDialog):
         self.ui.setupUi(self)
         self.ui.Username.setFocus()
         
-    def getusername(self):
-        """Get username"""
-        return self.ui.Username.text()
-
     def accept(self):
         from re import match
         # Validate username
@@ -121,7 +172,6 @@ class NewOperatorDlg(QDialog):
             criticalmessage("Passwords do not match", "Validation error")
             self.ui.Password1.setFocus()
             return
-        flag = 0
         # TODO Change by isweakpassword
         if is_weakpassword_dummy(self.ui.Password1.text()):
             criticalmessage("Weak password. Please use more than ten characters. Include lowercase and uppercase alphabetic characters, numbers and symbols (-_@$.,*#)", "Validation error")
@@ -133,6 +183,7 @@ class NewOperatorDlg(QDialog):
         result = store_operator(self.ui.Username.text(), self.ui.Fullname.text(), self.ui.Organization.text(), self.ui.Phone.text(), self.ui.Email.text(), get_hashedpassword(self.ui.Password1.text()))
         if result == "OK":
             fsession.log("Operator "+self.ui.Username.text()+" created")
+            fsession.operator = self.ui.Username.text()
             super().accept()
         else:
             criticalmessage(result, "Validation error")
@@ -212,6 +263,13 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Op_username.returnPressed.connect(self.onOpAuth)
         self.Op_username.setFocus()
         self.Op_auth.clicked.connect(self.onOpAuth)
+        self.Case_new.clicked.connect(self.onNewCase)
+        self.Case_select.currentTextChanged.connect(self.onCaseChange)
+
+        # Init controls
+        self.Case_select.addItem("")
+        for casename in get_listcasenames():
+            self.Case_select.addItem(casename)
 
     def onHelpAbout(self):
         """Launch the about dialog"""
@@ -233,16 +291,40 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
         dlg = NewOperatorDlg(self)
         if dlg.exec():
             # New operator created
-            self.Discovery.setEnabled(True)
+            self.Case.setEnabled(True)
             self.Op_new.setEnabled(False)
             self.Op_username.setEnabled(False)
             self.Op_username.setText(dlg.getusername())
             self.Op_auth.setText("Close")
             self.Op_auth.setEnabled(True)
-            fsession.operator = dlg.getusername()
-            fsession.log("New operator created")
+            fsession.log("New operator created and logged")
         else:
             fsession.log("New operator creation aborted")
+
+    def onNewCase(self):
+        """Launch new case dialog"""
+        fsession.log("Trying to create a new case")
+        dlg = NewCaseDlg(self)
+        if dlg.exec():
+            # New case created
+            self.Case_select.clear()
+            for casename in get_listcasenames():
+                self.Case_select.addItem(casename)
+            self.Discovery.setEnabled(True)
+            fsession.log("New case created and in use")
+        else:
+            fsession.log("New case creation aborted")
+
+    def onCaseChange(self, casename):
+        """Case changed"""
+        if casename != "":
+            fsession.case = casename
+            fsession.log("Case \""+casename+"\" in use")
+            self.Discovery.setEnabled(True)
+        else:
+            fsession.case = None
+            fsession.log("No case in use")
+            self.Discovery.setEnabled(False)
 
     def onOpEdited(self):
         """Operator edited, enable authentication"""
@@ -255,7 +337,7 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
             self.passworddlg.set_info(self.Op_username.text()+" password:")
             self.passworddlg.exec()
             if check_userpassword(self.Op_username.text(), self.passworddlg.get_password()):
-                self.Discovery.setEnabled(True)
+                self.Case.setEnabled(True)
                 self.Op_new.setEnabled(False)
                 self.Op_username.setEnabled(False)
                 self.Op_auth.setText("Close")
@@ -273,7 +355,7 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
             self.Op_username.setFocus()
             self.Op_auth.setText("Init")
             self.Op_auth.setEnabled(False)
-            fsession.log("Closed operator session")
+            fsession.log("Closed operator's session")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])

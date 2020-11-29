@@ -1,0 +1,60 @@
+- !!python/object:cases_ds.Case
+  description: testnotuse
+  devices: []
+  evidence_sm: []
+  id: 1
+  name: testnotuse
+  notary_email: testnotuse@example.com
+  notary_name: testnotuse
+  notary_phone: '+34919191919'
+  open_date: 2020-11-29 13:10:21.817812
+  pictures: []
+- !!python/object:cases_ds.Case
+  description: 'sdafsdfdsf
+
+    dsfsd
+
+    f
+
+    sdaf
+
+    sdf'
+  devices: []
+  evidence_sm: []
+  id: 1
+  name: test_case
+  notary_email: dsfsdf@sdafasd.com
+  notary_name: sdfdasfsdafsdfds
+  notary_phone: '+12312323'
+  open_date: 2020-11-29 16:33:45.270384
+  pictures: []
+- !!python/object:cases_ds.Case
+  description: 'asdasdsadas as
+
+    d asd
+
+    as
+
+    d asd
+
+    asd sas das'
+  devices: []
+  evidence_sm: []
+  id: 1
+  name: Another case
+  notary_email: sadas@asd.com
+  notary_name: asdasdsadasdsadsa
+  notary_phone: '+654164231'
+  open_date: 2020-11-29 16:51:49.423843
+  pictures: []
+- !!python/object:cases_ds.Case
+  description: "sdafsadsadasdsa\n\t\tdsfsdfds"
+  devices: []
+  evidence_sm: []
+  id: 1
+  name: oooooootroasdasdsad
+  notary_email: sadfasd@asdasd.com
+  notary_name: sdfsdfsdfsdf
+  notary_phone: '+3243243241'
+  open_date: 2020-11-29 16:55:01.110987
+  pictures: []
