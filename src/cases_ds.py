@@ -23,21 +23,17 @@ Cases info module
 from datetime import datetime
 from yaml import full_load, dump
 
-last_id = 1
-"""Last ID used"""
 cases = []
 """List of cases"""
 
 class Case():
     """Case information"""
-    def __init__(self, name, description, notary_name, notary_phone, notary_email):
+    def __init__(self, name, id_external, description, notary_name, notary_phone, notary_email):
         """Initializer"""
-        global last_id
         self.name = name
         """Name of the case"""
-        self.id = last_id
-        last_id += 1
-        """Unique ID of the case"""
+        self.id_external = id_external
+        """Unique external ID of the case"""
         self.notary_name = notary_name
         """Notary or witness phone"""
         self.notary_phone = notary_phone
@@ -64,6 +60,11 @@ def get_listcasenames():
         listcasenames.append(case.name)
     return listcasenames
 
+def get_casebyname(name):
+    for case in cases:
+        if name == case.name:
+            return case
+
 def save_cases():
     """Write cases list to file"""
     try:
@@ -85,15 +86,42 @@ def load_cases():
         print ("ERROR: cases_ds: load_cases")
         return
 
-def store_case(name, description, notary_name, notary_phone, notary_email):
+def store_case(name, id_external, description, notary_name, notary_phone, notary_email):
     """Store a new case"""
     # Check not duplicate name
     for case in cases:
         if name == case.name:
-            return "Case name really exist. Please select another one."
-    Case(name, description, notary_name, notary_phone, notary_email)
+            return "Case name already exists. Please select another one."
+    # Check not duplicate id
+    for case in cases:
+        if id_external == case.id_external:
+            return "Case ID already exists. Please select another one."
+    Case(name, id_external, description, notary_name, notary_phone, notary_email)
     save_cases()
     return "OK"
+
+def delete_case(name):
+    for case in cases:
+        if name == case.name:
+            cases.remove(case)
+            save_cases()
+            return "OK"
+    return "Case does not exist"
+
+def update_case(old_name, name, id_external, description, notary_name, notary_phone, notary_email):
+    """Update a case"""
+    # Remove old case
+    result = delete_case(old_name)
+    if result == "OK":
+        # Store new updated case
+        result = store_case(name, id_external, description, notary_name, notary_phone, notary_email)
+        if result == "OK":
+            save_cases()
+        else:
+            result = result + " Case store operation in update failed. Cases information is inconsistent."
+    else:
+        result = "Case does not exist. Update failed."
+    return result
 
 # Load operators from file at init time
 load_cases()

@@ -42,3 +42,11 @@ class ForensicSession():
 		"""Log session messages into session logging file"""
 		self.sessionlog.append(message)
 		info(message)
+
+	def set_case(self, casename):
+		"""Sets active case"""
+		self.case = casename
+		if not casename:
+			self.log("No case in use")
+		else:
+			self.log("Case \""+casename+"\" in use")

@@ -1,60 +1,22 @@
 - !!python/object:cases_ds.Case
-  description: testnotuse
+  description: "Caso de prueba, enano ladr\xF3n"
   devices: []
   evidence_sm: []
-  id: 1
-  name: testnotuse
-  notary_email: testnotuse@example.com
-  notary_name: testnotuse
-  notary_phone: '+34919191919'
-  open_date: 2020-11-29 13:10:21.817812
-  pictures: []
-- !!python/object:cases_ds.Case
-  description: 'sdafsdfdsf
-
-    dsfsd
-
-    f
-
-    sdaf
-
-    sdf'
-  devices: []
-  evidence_sm: []
-  id: 1
-  name: test_case
-  notary_email: dsfsdf@sdafasd.com
-  notary_name: sdfdasfsdafsdfds
+  id_external: External ID 3
+  name: Robo de regalos
+  notary_email: noelf@sdafasd.com
+  notary_name: "Pap\xE1 Noel"
   notary_phone: '+12312323'
-  open_date: 2020-11-29 16:33:45.270384
+  open_date: 2020-12-09 16:38:42.244567
   pictures: []
 - !!python/object:cases_ds.Case
-  description: 'asdasdsadas as
-
-    d asd
-
-    as
-
-    d asd
-
-    asd sas das'
+  description: Se bajaba peliculas ilegalmente
   devices: []
   evidence_sm: []
-  id: 1
-  name: Another case
-  notary_email: sadas@asd.com
-  notary_name: asdasdsadasdsadsa
-  notary_phone: '+654164231'
-  open_date: 2020-11-29 16:51:49.423843
-  pictures: []
-- !!python/object:cases_ds.Case
-  description: "sdafsadsadasdsa\n\t\tdsfsdfds"
-  devices: []
-  evidence_sm: []
-  id: 1
-  name: oooooootroasdasdsad
-  notary_email: sadfasd@asdasd.com
-  notary_name: sdfsdfsdfsdf
-  notary_phone: '+3243243241'
-  open_date: 2020-11-29 16:55:01.110987
+  id_external: Mi id
+  name: Descarga ilegal
+  notary_email: wd23@asdsa.com
+  notary_name: 223123wqewqe
+  notary_phone: '+213213213'
+  open_date: 2020-12-09 16:43:32.020059
   pictures: []

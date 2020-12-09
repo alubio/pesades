@@ -27,26 +27,19 @@ from time import sleep
 from datetime import datetime
 
 # Logging
-from logging import basicConfig, debug, warning, error, DEBUG, WARNING
-from PyQt5.QtCore import QRunnable, pyqtSlot, QThreadPool
-class Logger(QRunnable):
+from PyQt5.QtCore import QThread, pyqtSignal
+from threading import Event
+class Logger(QThread):
     """Logger thread"""
+    update = pyqtSignal()
 
-    def __init__(self, logdlg):
-        """Initializer"""
-        super(Logger, self).__init__()
-        self.logdlg = logdlg
-        self.lastlogitem = 0
+    def __init__(self, event):
+        QThread.__init__(self)
+        self.stopped = event
 
-    @pyqtSlot()
     def run(self):
-        """Logger activities"""
-        while True:
-            if self.lastlogitem < len(fsession.sessionlog):
-                for m in fsession.sessionlog[self.lastlogitem:]:
-                    self.lastlogitem += 1
-                    self.logdlg.addItem(str(datetime.now())+": "+m)
-            sleep(1)
+        while not self.stopped.wait(1):    
+            self.update.emit()
 
 # GUI
 from PyQt5.QtWidgets import QDialog
@@ -81,7 +74,10 @@ from cases_ds import *
 fsession = ForensicSession()
 fsession.log("Session created")
 """Forensic session related information"""
-__version__ = "0.1.1"
+
+# 0.1.1 Initial version
+# 0.1.2 License modified to GPLv3
+__version__ = "0.1.2"
 """str: Major.Minor.Patch versioning"""
 
 class AboutDlg(QDialog):
@@ -94,16 +90,27 @@ class AboutDlg(QDialog):
 
     def setversion(self, version):
         """Change the verion label"""
-        self.ui.Version.setText(_translate("About", "Version "+version))
+        self.ui.Version.setText(_translate("About", "Version "+version+" - GNU GPLv3 License - Copyright 2021 Iván Paniagua Barrilero"))
 
 class NewCaseDlg(QDialog):
     """New operator dialog"""
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, edit=False):
         """Initializer"""
         super().__init__(parent)
         self.ui = Ui_NewCase()
         self.ui.setupUi(self)
         self.ui.Name.setFocus()
+        self.edit = edit
+        if edit:
+            # Case editing
+            self.old_name = fsession.case
+            case = get_casebyname(self.old_name)
+            self.ui.Name.setText(case.name)
+            self.ui.ID_external.setText(str(case.id_external))
+            self.ui.Description.setText(str(case.description))
+            self.ui.Notary_name.setText(str(case.notary_name))
+            self.ui.Notary_phone.setText(str(case.notary_phone))
+            self.ui.Notary_email.setText(str(case.notary_email))
 
     def accept(self):
         # Validate name
@@ -114,6 +121,11 @@ class NewCaseDlg(QDialog):
         if self.ui.Name.text() == "testnotuse":
             criticalmessage("Invalid username, please use another one", "Validation error")
             self.ui.Name.setFocus()
+            return
+        # Validate external ID
+        if len(self.ui.ID_external.text()) < 3:
+            criticalmessage("Invalid external ID, please use more than two characters", "Validation error")
+            self.ui.ID_external.setFocus()
             return
         # Validate description
         if len(self.ui.Description.toPlainText()) < 11:
@@ -137,14 +149,22 @@ class NewCaseDlg(QDialog):
             return
 
         # Validation OK
-        # Store new case
-        result = store_case(self.ui.Name.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text())
-        if result == "OK":
-            fsession.log("Case "+self.ui.Name.text()+" created")
-            fsession.case = self.ui.Name.text()
-            super().accept()
+
+        if self.edit:
+            # Edit case
+            result = update_case(self.old_name, self.ui.Name.text(), self.ui.ID_external.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text())
+            if result == "OK":
+                super().accept()
+            else:
+                criticalmessage(result, "Validation error")
         else:
-            criticalmessage(result, "Validation error")
+            # Store new case
+            result = store_case(self.ui.Name.text(), self.ui.ID_external.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text())
+            if result == "OK":
+                fsession.set_case(self.ui.Name.text())
+                super().accept()
+            else:
+                criticalmessage(result, "Validation error")
 
 class NewOperatorDlg(QDialog):
     """New operator dialog"""
@@ -259,15 +279,15 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
         self.setupUi(self)
 
-        self.threadpool = QThreadPool()
-        """Threading engine"""
-
         self.forensicsesion = ForensicSession()
         """Forensic session"""
 
         # Logging
-        self.logger = Logger(self.Log)
-        self.threadpool.start(self.logger)
+        self.stop_flag = Event()
+        self.lastlogitem = 0
+        self.logger = Logger(self.stop_flag)
+        self.logger.update.connect(self.updateLog)
+        self.logger.start()
 
         # Init generic dialogs
         self.yesnodlg = YesNoDlg(self)
@@ -289,6 +309,13 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Case_select.addItem("")
         for casename in get_listcasenames():
             self.Case_select.addItem(casename)
+
+    def updateLog(self):
+        if self.lastlogitem < len(fsession.sessionlog):
+            for m in fsession.sessionlog[self.lastlogitem:]:
+                self.lastlogitem += 1
+                self.Log.addItem(str(datetime.now())+": "+m)
+                self.Log.scrollToBottom()
 
     def onHelpAbout(self):
         """Launch the about dialog"""
@@ -322,28 +349,46 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def onNewCase(self):
         """Launch new case dialog"""
-        fsession.log("Trying to create a new case")
-        dlg = NewCaseDlg(self)
-        if dlg.exec():
-            # New case created
-            self.Case_select.clear()
-            for casename in get_listcasenames():
-                self.Case_select.addItem(casename)
-            self.Discovery.setEnabled(True)
-            fsession.log("New case created and in use")
+        if self.Case_new.text() == "New case":
+            fsession.log("Trying to create a new case")
+            dlg = NewCaseDlg(self, False)
+            if dlg.exec():
+                # New case created
+                self.Discovery.setEnabled(True)
+                fsession.log("New case created")
+                # Update cases list
+                self.Case_select.clear()
+                self.Case_select.addItem("")
+                for casename in get_listcasenames():
+                    self.Case_select.addItem(casename)
+            else:
+                fsession.log("New case creation aborted")
         else:
-            fsession.log("New case creation aborted")
+            fsession.log("Trying to update "+self.Case_select.currentText()+" case")
+            dlg = NewCaseDlg(self, True)
+            if dlg.exec():
+                # New case created
+                self.Discovery.setEnabled(True)
+                fsession.log("Case updated")
+                # Update cases list
+                self.Case_select.clear()
+                self.Case_select.addItem("")
+                for casename in get_listcasenames():
+                    self.Case_select.addItem(casename)
+            else:
+                fsession.log("Case editing aborted")
+        
 
     def onCaseChange(self, casename):
         """Case changed"""
         if casename != "":
-            fsession.case = casename
-            fsession.log("Case \""+casename+"\" in use")
+            fsession.set_case(casename)
             self.Discovery.setEnabled(True)
+            self.Case_new.setText("Edit case")
         else:
-            fsession.case = None
-            fsession.log("No case in use")
+            fsession.set_case(None)
             self.Discovery.setEnabled(False)
+            self.Case_new.setText("New case")
 
     def onOpEdited(self):
         """Operator edited, enable authentication"""

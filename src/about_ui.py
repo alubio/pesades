@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './uis/about.ui'
+# Form implementation generated from reading ui file 'about.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -24,7 +24,7 @@ class Ui_About(object):
         self.label.setFont(font)
         self.label.setObjectName("label")
         self.Version = QtWidgets.QLabel(About)
-        self.Version.setGeometry(QtCore.QRect(190, 60, 191, 16))
+        self.Version.setGeometry(QtCore.QRect(20, 60, 511, 20))
         font = QtGui.QFont()
         font.setPointSize(10)
         self.Version.setFont(font)

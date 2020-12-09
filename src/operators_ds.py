@@ -82,7 +82,7 @@ def store_operator(username, fullname, organization, phone, email, password):
     # Check not duplicate username
     for operator in operators:
         if username == operator.username:
-            return "Username really exist. Please select another one."
+            return "Username already exists. Please select another one."
     Operator(username, fullname, organization, phone, email, password)
     save_operators()
     return "OK"

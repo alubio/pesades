@@ -27,7 +27,7 @@ from operators_ds import *
 
 def test_store_operator():
     """Test store_operator"""
-    assert store_operator("testnotuse", "testnotuse", "testnotuse", "+34919191919", "testnotuse@example.com", "testnotuse") == "Username really exist. Please select another one."
+    assert store_operator("testnotuse", "testnotuse", "testnotuse", "+34919191919", "testnotuse@example.com", "testnotuse") == "Username already exists. Please select another one."
 
 def test_check_password():
     """Test check_password"""
