@@ -20,5 +20,9 @@
 """
 PESADES discovery engine.
 """
+from blkinfo import *
 
-print ("ss")
+myblkd = BlkDiskInfo()
+all_my_disks = myblkd.get_disks()
+for disk in all_my_disks:
+    print(disk['name'],disk['serial'])
