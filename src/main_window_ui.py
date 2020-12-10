@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'src\uis\main_window.ui'
+# Form implementation generated from reading ui file 'src/uis/main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.Log = QtWidgets.QListWidget(self.centralwidget)
-        self.Log.setGeometry(QtCore.QRect(9, 309, 621, 121))
+        self.Log.setGeometry(QtCore.QRect(9, 309, 621, 111))
         font = QtGui.QFont()
         font.setPointSize(9)
         self.Log.setFont(font)
@@ -128,6 +128,8 @@ class Ui_MainWindow(object):
         self.line_7.setObjectName("line_7")
         self.line_9 = QtWidgets.QFrame(self.centralwidget)
         self.line_9.setGeometry(QtCore.QRect(120, 220, 241, 20))
+        self.line_9.setLineWidth(1)
+        self.line_9.setMidLineWidth(0)
         self.line_9.setFrameShape(QtWidgets.QFrame.HLine)
         self.line_9.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line_9.setObjectName("line_9")

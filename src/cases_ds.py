@@ -122,6 +122,3 @@ def update_case(old_name, name, id_external, description, notary_name, notary_ph
     else:
         result = "Case does not exist. Update failed."
     return result
-
-# Load operators from file at init time
-load_cases()

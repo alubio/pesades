@@ -1,16 +1,8 @@
 - !!python/object:operators_ds.Operator
-  create_date: 2020-11-27 13:54:41.343788
+  create_date: 2020-12-10 14:53:52.837020
   email: testnotuse@example.com
   fullname: testnotuse
   organization: testnotuse
   password: testnotuse
   phone: '+34919191919'
   username: testnotuse
-- !!python/object:operators_ds.Operator
-  create_date: 2020-11-28 10:11:27.790957
-  email: test@example.com
-  fullname: test test test
-  organization: test
-  password: XsL9oGnSY6llTOQGfr9ZKPbKxOvGZ3IqyHM4XOZoh9QAgft7G0NC6Lq3Lzw3vQf3urJtIT4/dm12mlMijT0Tpg==
-  phone: '+11111111'
-  username: test

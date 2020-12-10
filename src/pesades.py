@@ -24,24 +24,10 @@ PESADES main module.
 # Generic imports
 from re import match
 from time import sleep
-from datetime import datetime
-
-# Logging
-from PyQt5.QtCore import QThread, pyqtSignal
 from threading import Event
-class Logger(QThread):
-    """Logger thread"""
-    update = pyqtSignal()
-
-    def __init__(self, event):
-        QThread.__init__(self)
-        self.stopped = event
-
-    def run(self):
-        while not self.stopped.wait(1):    
-            self.update.emit()
 
 # GUI
+from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QDialog
 from PyQt5 import QtCore
 #from PyQt5.QtCore import QRegExp
@@ -56,6 +42,39 @@ from new_operator_ui import *
 from new_case_ui import *
 from password_dialog_ui import *
 
+# Logging
+class Logger(QThread):
+    """Logger thread"""
+    update = pyqtSignal()
+
+    def __init__(self, event):
+        QThread.__init__(self)
+        self.stopped = event
+
+    def run(self):
+        while not self.stopped.wait(1):    
+            self.update.emit()
+
+# Initial background tasks
+class InitTasks(QThread):
+    """Background initial tasks"""
+    ended = pyqtSignal()
+
+    def run(self):
+        fsession.log("Initial tasks started")
+        fsession.start()
+        fsession.log("Initial tasks ended")
+        self.ended.emit()
+
+# Final background tasks
+class FinalTasks(QThread):
+    """Background final tasks"""
+    def run(self):
+        fsession.log("Final tasks started")
+        fsession.end()
+        fsession.log("Final tasks ended")
+
+
 def criticalmessage(message, title="PESADES"):
     fsession.log("Error: "+message)
     msg = QMessageBox()
@@ -66,13 +85,13 @@ def criticalmessage(message, title="PESADES"):
     msg.exec()
 
 # PESADES
+from pesades_config import *
 from forensic_session import *
 from pesades_crypto import *
 from operators_ds import *
 from cases_ds import *
 
 fsession = ForensicSession()
-fsession.log("Session created")
 """Forensic session related information"""
 
 # 0.1.1 Initial version
@@ -289,6 +308,30 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
         self.logger.update.connect(self.updateLog)
         self.logger.start()
 
+        # Status bar
+        self.statusBar = QtWidgets.QStatusBar()
+        self.statusBar.setStyleSheet('QStatusBar::item {border: None;}')
+        self.setStatusBar(self.statusBar)
+        self.statuslabel = QtWidgets.QLabel()
+        self.statuslabel.setAlignment(QtCore.Qt.AlignLeft)
+        self.clocklabel = QtWidgets.QLabel()
+        self.clocklabel.setAlignment(QtCore.Qt.AlignRight)
+        self.qwstatusbar = QtWidgets.QWidget()
+        self.qwstatusbar.setLayout(QtWidgets.QHBoxLayout())
+        self.qwstatusbar.layout().addWidget(self.statuslabel)
+        self.qwstatusbar.layout().addWidget(self.clocklabel)
+        self.statusBar.addPermanentWidget(self.qwstatusbar, 2)
+        self.updateClock()
+        self.clocktimer = QtCore.QTimer(self)
+        self.clocktimer.setInterval(1000)
+        self.clocktimer.timeout.connect(self.updateClock)
+        self.clocktimer.start()
+
+        #  Initial background tasks
+        self.inittasks = InitTasks()
+        self.inittasks.ended.connect(self.initTasksEnded)
+        self.inittasks.start()
+
         # Init generic dialogs
         self.yesnodlg = YesNoDlg(self)
         self.infodlg = InfoDlg(self)
@@ -305,16 +348,20 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Case_new.clicked.connect(self.onNewCase)
         self.Case_select.currentTextChanged.connect(self.onCaseChange)
 
+    def initTasksEnded(self):
         # Init controls
         self.Case_select.addItem("")
         for casename in get_listcasenames():
             self.Case_select.addItem(casename)
 
+    def updateClock(self):
+        self.clocklabel.setText(QtCore.QDateTime.currentDateTime().toString("HH:mm:ss"))
+
     def updateLog(self):
         if self.lastlogitem < len(fsession.sessionlog):
             for m in fsession.sessionlog[self.lastlogitem:]:
                 self.lastlogitem += 1
-                self.Log.addItem(str(datetime.now())+": "+m)
+                self.Log.addItem(m)
                 self.Log.scrollToBottom()
 
     def onHelpAbout(self):
@@ -325,10 +372,14 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def onExit(self):
         """Exit"""
-        self.yesnodlg.setinfoquestion("No ha hecho nada", "Do you really want to exit?")
+        self.yesnodlg.setinfoquestion("Nothing done", "Do you really want to exit?")
         result = self.yesnodlg.exec()
         if result:
             fsession.log("Session closed")
+            #  Initial background tasks
+            finaltasks = FinalTasks()
+            finaltasks.start()
+            finaltasks.wait()
             self.close()
 
     def onNewOperator(self):
@@ -378,7 +429,6 @@ class MainWindowDlg(QtWidgets.QMainWindow, Ui_MainWindow):
             else:
                 fsession.log("Case editing aborted")
         
-
     def onCaseChange(self, casename):
         """Case changed"""
         if casename != "":

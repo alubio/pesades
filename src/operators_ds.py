@@ -86,6 +86,3 @@ def store_operator(username, fullname, organization, phone, email, password):
     Operator(username, fullname, organization, phone, email, password)
     save_operators()
     return "OK"
-
-# Load operators from file at init time
-load_operators()

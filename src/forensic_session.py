@@ -23,6 +23,9 @@ Forensic specific classes.
 
 from logging import basicConfig, info, INFO
 basicConfig(filename='src/ds/session.log', format='%(asctime)s:session:%(levelname)s:%(message)s', level=INFO)
+from operators_ds import load_operators
+from cases_ds import load_cases
+from datetime import datetime
 
 class ForensicSession():
 	"""Forensic session management"""
@@ -36,11 +39,12 @@ class ForensicSession():
 		"""Session log"""
 
 		# Empty session log file
+		# TODO rotate log file, create new one with different name
 		open('src/ds/session.log', 'w').close()
 
 	def log(self, message):
 		"""Log session messages into session logging file"""
-		self.sessionlog.append(message)
+		self.sessionlog.append(str(datetime.now())+": "+message)
 		info(message)
 
 	def set_case(self, casename):
@@ -50,3 +54,17 @@ class ForensicSession():
 			self.log("No case in use")
 		else:
 			self.log("Case \""+casename+"\" in use")
+
+	def start(self):
+		"""Session starting activities"""
+		# TODO Update system date and time
+		from time import sleep
+		self.log("Load operators from file")
+		load_operators()
+		self.log("Load cases from file")
+		load_cases()
+		self.log("Session started")
+
+	def end(self):
+		"""Session ending activities"""
+		self.log("Session ended")
