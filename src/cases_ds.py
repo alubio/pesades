@@ -47,7 +47,7 @@ class Case():
         self.devices = []
         """Known devices like pen drives, PCs, laptops, etc."""
         self.pictures = []
-        """Pictures from the scrime scene"""
+        """Pictures from the crime scene"""
         self.evidence_sm = []
         """Storage medias available for storing evidences"""
 

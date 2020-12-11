@@ -25,4 +25,6 @@ from blkinfo import *
 myblkd = BlkDiskInfo()
 all_my_disks = myblkd.get_disks()
 for disk in all_my_disks:
-    print(disk['name'],disk['serial'])
+    print(disk['kname'],disk['size'],disk['tran'],disk['vendor'], disk['model'], disk['statistics'])
+
+print (all_my_disks[1].keys())
