@@ -27,14 +27,14 @@ from cases_ds import *
 
 def test_process_case():
     """Test case creation, update and deletion"""
-    assert store_case("testnotuse1", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com") == "OK"
-    assert update_case("testnotuse1", "testnotuse2", "idnotuse2", "testnotuse2", "testnotuse2", "+34222222222", "testnotuse2@example.com") == "OK"
-    assert update_case("testnotuse2", "testnotuse3", "idnotuse3", "testnotuse3", "testnotuse3", "+34233333333", "testnotuse3@example.com") == "OK"
+    assert store_case("testnotuse1", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com", False) == "OK"
+    assert update_case("testnotuse1", "testnotuse2", "idnotuse2", "testnotuse2", "testnotuse2", "+34222222222", "testnotuse2@example.com", False) == "OK"
+    assert update_case("testnotuse2", "testnotuse3", "idnotuse3", "testnotuse3", "testnotuse3", "+34233333333", "testnotuse3@example.com", False) == "OK"
     assert delete_case("testnotuse3") == "OK"
     assert delete_case("testnotuse2") == "Case does not exist"
     assert delete_case("testnotuse1") == "Case does not exist"
-    assert store_case("testnotuse1", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com") == "OK"
-    assert store_case("testnotuse1", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com") == "Case name already exists. Please select another one."
-    assert store_case("testnotuse2", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com") == "Case ID already exists. Please select another one."
+    assert store_case("testnotuse1", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com", False) == "OK"
+    assert store_case("testnotuse1", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com", False) == "Case name already exists. Please select another one."
+    assert store_case("testnotuse2", "idnotuse1", "testnotuse1", "testnotuse1", "+34919191919", "testnotuse1@example.com", False) == "Case ID already exists. Please select another one."
     assert get_casebyname("testnotuse1") == get_casebyname("testnotuse1")
     assert delete_case("testnotuse1") == "OK"

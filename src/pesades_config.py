@@ -20,3 +20,6 @@
 """
 PESADES configmain module.
 """
+
+NTPserver1 = "hora.roa.es"
+NTPserver2 = "minuto.roa.es"

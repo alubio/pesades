@@ -119,6 +119,7 @@ class NewCaseDlg(QDialog):
         self.ui = Ui_NewCase()
         self.ui.setupUi(self)
         self.ui.Name.setFocus()
+        self.yesnodlg = YesNoDlg(self)
         self.edit = edit
         if edit:
             # Case editing
@@ -130,6 +131,8 @@ class NewCaseDlg(QDialog):
             self.ui.Notary_name.setText(str(case.notary_name))
             self.ui.Notary_phone.setText(str(case.notary_phone))
             self.ui.Notary_email.setText(str(case.notary_email))
+            for device in case.devices:
+                self.ui.Devices.addItem(device.name+' - '+device.description)
 
     def accept(self):
         # Validate name
@@ -168,17 +171,21 @@ class NewCaseDlg(QDialog):
             return
 
         # Validation OK
-
+        self.yesnodlg.setinfoquestion("Is this device, where PESADES is running, a case one", "")
+        if self.yesnodlg.exec():
+            thisdevice = True
+        else:
+            thisdevice = False
         if self.edit:
             # Edit case
-            result = update_case(self.old_name, self.ui.Name.text(), self.ui.ID_external.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text())
+            result = update_case(self.old_name, self.ui.Name.text(), self.ui.ID_external.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text(), thisdevice)
             if result == "OK":
                 super().accept()
             else:
                 criticalmessage(result, "Validation error")
         else:
             # Store new case
-            result = store_case(self.ui.Name.text(), self.ui.ID_external.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text())
+            result = store_case(self.ui.Name.text(), self.ui.ID_external.text(), self.ui.Description.toPlainText(), self.ui.Notary_name.text(), self.ui.Notary_phone.text(), self.ui.Notary_email.text(), thisdevice)
             if result == "OK":
                 fsession.set_case(self.ui.Name.text())
                 super().accept()

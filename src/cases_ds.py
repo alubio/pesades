@@ -22,13 +22,14 @@ Cases info module
 """
 from datetime import datetime
 from yaml import full_load, dump
+from devices_ds import thisdevice
 
 cases = []
 """List of cases"""
 
 class Case():
     """Case information"""
-    def __init__(self, name, id_external, description, notary_name, notary_phone, notary_email):
+    def __init__(self, name, id_external, description, notary_name, notary_phone, notary_email, isthisdevice):
         """Initializer"""
         self.name = name
         """Name of the case"""
@@ -50,9 +51,19 @@ class Case():
         """Pictures from the crime scene"""
         self.evidence_sm = []
         """Storage medias available for storing evidences"""
+        self.case_sm = []
+        """Storage medias from case"""
+        if isthisdevice:
+            self.devices.append(thisdevice)
 
         # Append newly created case to cases list
         cases.append(self)
+
+    def addthisdevice(self):
+        self.devices.append(thisdevice)
+
+    def delthisdevice(self):
+        self.devices.remove(thisdevice)
 
 def get_listcasenames():
     listcasenames = []
@@ -86,7 +97,7 @@ def load_cases():
         print ("ERROR: cases_ds: load_cases")
         return
 
-def store_case(name, id_external, description, notary_name, notary_phone, notary_email):
+def store_case(name, id_external, description, notary_name, notary_phone, notary_email, isthisdevice):
     """Store a new case"""
     # Check not duplicate name
     for case in cases:
@@ -96,7 +107,7 @@ def store_case(name, id_external, description, notary_name, notary_phone, notary
     for case in cases:
         if id_external == case.id_external:
             return "Case ID already exists. Please select another one."
-    Case(name, id_external, description, notary_name, notary_phone, notary_email)
+    newcase = Case(name, id_external, description, notary_name, notary_phone, notary_email, isthisdevice)
     save_cases()
     return "OK"
 
@@ -108,13 +119,13 @@ def delete_case(name):
             return "OK"
     return "Case does not exist"
 
-def update_case(old_name, name, id_external, description, notary_name, notary_phone, notary_email):
+def update_case(old_name, name, id_external, description, notary_name, notary_phone, notary_email, isthisdevice):
     """Update a case"""
     # Remove old case
     result = delete_case(old_name)
     if result == "OK":
         # Store new updated case
-        result = store_case(name, id_external, description, notary_name, notary_phone, notary_email)
+        result = store_case(name, id_external, description, notary_name, notary_phone, notary_email, isthisdevice)
         if result == "OK":
             save_cases()
         else:

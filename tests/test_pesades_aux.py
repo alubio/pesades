@@ -18,15 +18,15 @@
 # along with PESADES.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-PESADES discovery engine.
+Tests for pesades_aux.py module.
 """
-from blkinfo import *
 
-myblkd = BlkDiskInfo()
-all_my_disks = myblkd.get_disks()
-for disk in all_my_disks:
-    #print(disk['name'],disk['mountpoint'],disk['tran'],disk['vendor'], disk['model'], disk['statistics'])
-    print (disk)
+from pesades_aux import *
 
-print (all_my_disks[1].keys())
-# lsblk -n -l -o PATH,MOUNTPOINT,TYPE
+def test_shellexec():
+    assert shellexec("echo hola") == (0,'hola\n','')
+    assert shellexec("commandnotexists") == (1,'','')
+
+def test_stringsinshellexec():
+    assert stringsinshellexec("echo hola adios", ["hola"]) == True
+    assert stringsinshellexec("echo hola adios", ["hola","adios"]) == True
