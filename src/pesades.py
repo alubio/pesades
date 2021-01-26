@@ -74,7 +74,6 @@ class FinalTasks(QThread):
         fsession.end()
         fsession.log("Final tasks ended")
 
-
 def criticalmessage(message, title="PESADES"):
     fsession.log("Error: "+message)
     msg = QMessageBox()

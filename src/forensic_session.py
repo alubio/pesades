@@ -74,14 +74,14 @@ class ForensicSession():
             r,o,e = shellexec("systemctl restart systemd-timesyncd.service")
             if r != 0:
                 self.log("ERROR Failed to restart systemd-timesyncd.service")
-                break
+                return
             r,o,e = shellexec("timedatectl set-ntp true")
             if r != 0:
                 self.log("ERROR Failed to activate NTP")
-                break
+                return
             self.log("NTP configuration corrected")
         except:
-            break
+            pass
         self.log("ERROR updating system time and date")
 
     def start(self):
