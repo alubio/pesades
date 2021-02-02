@@ -38,11 +38,11 @@ class Operator():
         self.create_date = datetime.now()
         """Create date of the operator"""
         self.organization = organization
-        """Operator's fullname"""
+        """Operator's organization"""
         self.phone = phone
         """Operator's phone number"""
         self.email = email
-        """Operator's fullname"""
+        """Operator's email"""
         self.password = password
         """Operator's hashed password"""
 

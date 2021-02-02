@@ -26,10 +26,12 @@ DeviceTypes = ['computer', 'laptop', 'usbpendrive', 'CD', 'DVD', 'NAS', 'smartph
 
 class Device():
     """Device information"""
-    def __init__(self, name, type, description, manufacturer, model, serial):
+    def __init__(self, name, type, description, manufacturer, model, serial, filename=""):
         """Initializer"""
         self.name = name
         """Name of the device"""
+        self.filename = filename
+        """Name of the system file /dev/xxx"""
         self.type = type
         """Type: PC, laptop, usbpendrive, CD, DVD, NAS, smartphone"""
         self.description = description
