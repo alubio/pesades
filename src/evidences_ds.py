@@ -18,24 +18,35 @@
 # along with PESADES.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Devices info module: pen drives, PCs, laptops, etc.
+Evidences info module: pen drives, PCs, laptops, URLs, data, etc.
 """
+from pesades_aux import shellexec
 
-DeviceTypes = ['computer', 'laptop', 'usbpendrive', 'CD', 'DVD', 'NAS', 'smartphone']
-"""Predefined device types"""
+evidence_type = ["FILE", "DATA", "PICTURE", "DEVICE", "OTHER"]
+"""Predefined evidence types"""
+method_type = ["ACQUISITION", "COLLECTION"]
+"""Predefined process method types"""
 
-class Device():
-    """Device information"""
-    def __init__(self, name, type, description, manufacturer, model, serial, filename=""):
+class Evidence():
+    """Evidence information"""
+    def __init__(self, name, type, description):
         """Initializer"""
         self.name = name
         """Name of the device"""
+        self.description = description
+        """Description of the device"""
+
+device_type = ["PEN_DRIVE", "HARD_DRIVE", "DVR_HARD_DRIVE", "VIRTUAL_DRIVE", "CD", "DVD", "LAPTOP", "COMPUTER", "MOBILE_DEVICE", "OTHER"]
+"""Predefined device types"""
+
+class Device(Evidence):
+    """Device information"""
+    def __init__(self, name, description, evidence_type, device_type, manufacturer, model, serial, filename=""):
+        super().__init__(name, evidence_type, description)
         self.filename = filename
         """Name of the system file /dev/xxx"""
         self.type = type
         """Type: PC, laptop, usbpendrive, CD, DVD, NAS, smartphone"""
-        self.description = description
-        """Description of the device"""
         self.manufacturer = manufacturer
         """Manufacturer of the device"""
         self.model = model
@@ -44,4 +55,5 @@ class Device():
         """Serial number"""
 
 # Define special predefined devices
-thisdevice = Device('This device', 'computer','The device where PESADES is running', 'Unknown', 'Unknown', 'Unknown')
+# TODO poner el hostname en el thisdevice
+thisdevice = Device(shellexec("hostname")[1].rstrip(), 'The device where PESADES is running', 'DEVICE', 'COMPUTER', 'NA', 'NA', 'NA')

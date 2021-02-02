@@ -29,7 +29,7 @@ operators = []
 
 class Operator():
     """Operator information"""
-    def __init__(self, username, fullname, organization, phone, email, password):
+    def __init__(self, username, fullname, organization, role, phone, email, password):
         """Initializer"""
         self.username = username
         """Operator's username"""
@@ -39,6 +39,8 @@ class Operator():
         """Create date of the operator"""
         self.organization = organization
         """Operator's organization"""
+        self.role = role
+        """Operator's role"""
         self.phone = phone
         """Operator's phone number"""
         self.email = email

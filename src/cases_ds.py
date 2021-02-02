@@ -29,12 +29,14 @@ cases = []
 
 class Case():
     """Case information"""
-    def __init__(self, name, id_external, description, notary_name, notary_phone, notary_email, isthisdevice):
+    def __init__(self, name, id_external, description, notary_name, notary_phone, notary_email, isthisdevice=False):
         """Initializer"""
         self.name = name
         """Name of the case"""
         self.id_external = id_external
         """Unique external ID of the case"""
+        self.description = description
+        """Description of the case"""
         self.notary_name = notary_name
         """Notary or witness phone"""
         self.notary_phone = notary_phone
@@ -43,27 +45,38 @@ class Case():
         """Notary or witness of the case"""
         self.open_date = datetime.now()
         """Opening date of the case"""
-        self.description = description
-        """Description of the case"""
-        self.devices = []
-        """Known devices like pen drives, PCs, laptops, etc."""
-        self.pictures = []
-        """Pictures from the crime scene"""
-        self.evidence_sm = []
+        self.incident_date = datetime.now()
+        """Incident ocuring date"""
+        self.evidences = []
+        """Known evidences like pen drives, PCs, laptops, IP addresses, URLs, etc."""
+        self.storages = []
         """Storage medias available for storing evidences"""
-        self.case_sm = []
-        """Storage medias from case"""
+        self.caselog = []
+        """Case log"""
+        self.ext4 = False
+        """If forensic analyst request ext4 format in evidence storage media. No by default"""
         if isthisdevice:
-            self.devices.append(thisdevice)
+            self.evidences.append(thisdevice)
+            """The device where PESADES is running is an evidence"""
 
         # Append newly created case to cases list
         cases.append(self)
 
-    def addthisdevice(self):
-        self.devices.append(thisdevice)
+    def log(self, message):
+        """Log session messages into session logging file"""
+        self.caselog.append(str(datetime.now())+": "+message)
 
-    def delthisdevice(self):
-        self.devices.remove(thisdevice)
+    def add_this_device(self):
+        """The device where PESADES is running is an evidence"""
+        self.evidences.append(thisdevice)
+
+    def del_this_device(self):
+        """The device where PESADES is running is not an evidence"""
+        self.evidences.remove(thisdevice)
+
+    def set_ext4(self, value=True):
+        # Analyst may require ext4 format
+        self.ext4 = value
 
 def get_listcasenames():
     listcasenames = []

@@ -33,20 +33,27 @@ class ForensicSession():
     """Forensic session management"""
     def __init__(self):
         """Initializer"""
-        self.operator = None
-        """Operator in charge of the investigation"""
         self.case = None
         """Case in use"""
+        self.operator = None
+        """Operator in charge of the investigation"""
         self.sessionlog = []
         """Session log"""
+        hurried = False
+        """If the operator is in a hurry, for decision making"""
 
         # Empty session log file
         # TODO rotate log file, create new one with different name
         open('src/ds/session.log', 'w').close()
 
+    def set_hurried(self, value=True):
+        # The operator may be in a hurry
+        self.hurried = value
+    
     def log(self, message):
         """Log session messages into session logging file"""
         self.sessionlog.append(str(datetime.now())+": "+message)
+        self.case.log(message)
         info(message)
 
     def set_case(self, casename):
@@ -57,7 +64,7 @@ class ForensicSession():
         else:
             self.log("Case \""+casename+"\" in use")
 
-    def updatesystemtime(self):
+    def update_system_time(self):
         """Update system time and date"""
         if stringsinshellexec("timedatectl show-timesync",[NTPserver1, NTPserver2]):
             self.log("NTP servers configured")
@@ -87,7 +94,7 @@ class ForensicSession():
     def start(self):
         """Session starting activities"""
         self.log("Update system time")
-        self.updatesystemtime()
+        self.update_system_time()
         self.log("Load operators from file")
         load_operators()
         self.log("Load cases from file")
