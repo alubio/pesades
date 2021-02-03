@@ -72,7 +72,7 @@ class ForensicExpert(KnowledgeEngine):
     Forensic session decision rules
     """
     
-    # Raw format if the operator is ina hurry and there is enough space
+    # Raw format if the operator is in a hurry and there is enough space
     @Rule(ForensicSession(hurried=True),
           Evidence(name=MATCH.name))
     def hurried_enoughspace(self, name):
@@ -88,8 +88,13 @@ class ForensicExpert(KnowledgeEngine):
     def ext4(self, name):
         print("ext4 para almacenamiento "+name)
 
+    # No evidence storage medias
+    @Rule(NOT(Storage()),Evidence())
+    def no_storage(self):
+        print("Evidencias pendientes de procesar, solicitar dispositivos de almacenamiento de evidencias")
+
     """
-    Evidence and storage decision rules
+    Evidence processing rules
     """
     
     # No pending evidences
@@ -104,11 +109,6 @@ class ForensicExpert(KnowledgeEngine):
     def search_virtualdrives(self, name):
         print("Buscar virtual drives en evidencia "+name)
 
-    # No evidence storage medias
-    @Rule(NOT(Storage()),Evidence())
-    def no_storage(self):
-        print("Evidencias pendientes de procesar, solicitar dispositivos de almacenamiento de evidencias")
-
     # Not enough free space on storage
     @Rule(Evidence(name=MATCH.ename,
                    size=MATCH.size),
@@ -117,6 +117,13 @@ class ForensicExpert(KnowledgeEngine):
           TEST(lambda size, freespace: freespace < size))
     def not_enough_storage(self, ename, sname):
         print("Almacenamiento insuficiente en almacen "+sname+" para almacenar evidencia "+ename+", solicitar dispositivos de almacenamiento de evidencias.")
+
+    # Ask operator if the new device evidence is a DVR disk TODO
+    @Rule(Evidence(name=MATCH.name, device=True),
+    	  NOT(Evidence(dvr=W())),
+    	  salience=1)
+    def ask_if_dvr(self, name):
+    	print("¿el disco "+name+" es de un DVR?")
 
     # Raw format for DVR disks if there is enough space on a storage
     @Rule(Evidence(name=MATCH.ename,
