@@ -38,7 +38,7 @@ class Case(Fact):
     """
     name = Field(str, mandatory=True)
     # Name of the case
-    ext3 = Field(bool)
+    ext4 = Field(bool)
     # If the forensic analyst requires the use of ext4 in the evidence storage drives
 
 class Storage(Fact):
@@ -72,6 +72,12 @@ class ForensicExpert(KnowledgeEngine):
     Forensic session decision rules
     """
     
+    # Don't know if the operator is in a hurry
+    @Rule(NOT(ForensicSession(hurried=W())),
+          salience=1)
+    def dont_know_hurried(self):
+    	print("¿Tiene prisa?")
+
     # Raw format if the operator is in a hurry and there is enough space
     @Rule(ForensicSession(hurried=True),
           Evidence(name=MATCH.name))
@@ -82,6 +88,11 @@ class ForensicExpert(KnowledgeEngine):
     Case decision rules
     """
     
+    # Don't know if the forensic analyst requires ext4
+    @Rule(NOT(Case(ext4=W())))
+    def dont_know_ext4(self):
+    	print ("¿Se requiere ext4?")
+
     # Ext4 format for storage media if forensic analyst requires it
     @Rule(Case(ext4=True),
           Storage(name=MATCH.name))
@@ -119,12 +130,7 @@ class ForensicExpert(KnowledgeEngine):
         print("Almacenamiento insuficiente en almacen "+sname+" para almacenar evidencia "+ename+", solicitar dispositivos de almacenamiento de evidencias.")
 
     # Ask operator if the new device evidence is a DVR disk TODO
-    @Rule(Evidence(name=MATCH.name, device=True),
-    	  NOT(Evidence(dvr=W())),
-    	  salience=1)
-    def ask_if_dvr(self, name):
-    	print("¿el disco "+name+" es de un DVR?")
-
+   
     # Raw format for DVR disks if there is enough space on a storage
     @Rule(Evidence(name=MATCH.ename,
                    size=MATCH.size,
@@ -165,8 +171,8 @@ if __name__ == "__main__":
 
     engine = ForensicExpert()
     engine.reset()
-    engine.declare(ForensicSession(hurried=False))
-    engine.declare(Case(name="case1", ext4=False))
+    engine.declare(ForensicSession())
+    engine.declare(Case(name="case1"))
     engine.run()
     print("1-------------")
     evidencias["evidence1"] = engine.declare(Evidence(name="evidence1", size=3000))
