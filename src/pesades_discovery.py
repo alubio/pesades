@@ -20,13 +20,33 @@
 """
 PESADES discovery engine.
 """
-from blkinfo import *
+#from blkinfo import *
+from pyudev import *
 
-myblkd = BlkDiskInfo()
-all_my_disks = myblkd.get_disks()
-for disk in all_my_disks:
-    #print(disk['name'],disk['mountpoint'],disk['tran'],disk['vendor'], disk['model'], disk['statistics'])
-    print (disk)
+def test_blkinfo():
+    myblkd = BlkDiskInfo()
+    all_my_disks = myblkd.get_disks()
+    for disk in all_my_disks:
+        #print(disk['name'],disk['mountpoint'],disk['tran'],disk['vendor'], disk['model'], disk['statistics'])
+        print (disk)
 
-print (all_my_disks[1].keys())
-# lsblk -n -l -o PATH,MOUNTPOINT,TYPE
+    print (all_my_disks[1].keys())
+    # lsblk -n -l -o PATH,MOUNTPOINT,TYPE
+
+def test_pyudev():
+    context = Context()
+    ignoredevices = ["loop", "ram", "nbd", "vbox"]
+    for device in context.list_devices(subsystem='block', DEVTYPE='disk'):
+        devname = device.properties['DEVNAME']
+        if not any([x in devname for x in ignoredevices]):
+            idmodel = device.get('ID_MODEL')
+            idserialshort = device.get('ID_SERIAL_SHORT')
+            idvendor = device.get('ID_VENDOR')
+            #for key in device.properties.keys():
+            #    print (key, device.properties[key])
+            print (devname, idvendor, idmodel, idserialshort)
+
+if __name__ == "__main__":
+    print()
+    test_pyudev()
+    print()

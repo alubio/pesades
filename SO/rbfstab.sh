@@ -44,10 +44,10 @@ RULE=/etc/udev/rules.d/fstab.rules
 ## Functions
 log()
 {
-    logger -it rbfstab "$1"
+    logger -i --id=$$ -t rbfstab "$1"
 }
 
-log "Initiated rbfstab"
+#log "Initiated rbfstab"
 
 install_script()
 {
@@ -81,7 +81,7 @@ remove_script()
     mv "$TMP" /etc/fstab
     echo "* Removed ${0##*/} rules from /etc/fstab"
     log "* Removed ${0##*/} rules from /etc/fstab"
-    ## remove_unused_dirs
+    remove_unused_dirs
     exit 0
 }
 
@@ -94,7 +94,7 @@ remove_unused_dirs()
         echo "$DEV" | grep -q /dev/$DIR
         [ $? = 0 ] || rmdir /media/$DIR
     done
-    log "Removed unused dirs"
+    #log "Removed unused dirs"
 }
 
 usage()
@@ -170,6 +170,8 @@ do
     case $DEVICE in
         *loop*|*ram*|*nbd*|*vbox*) continue ;;
     esac
+
+    log "Processing $DEVICE"
 
     ## skip fstab entry for devices present during OS install
     grep -q $(blkid -s UUID -o value $DEVICE) /etc/fstab
