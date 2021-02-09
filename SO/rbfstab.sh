@@ -29,16 +29,26 @@
 #:                   : Block all kind of storage devices: sd*, sg*, fd*, etc.
 #: 30/01/20          : blkid -s LABEL -o value /dev/sd* changed behaviour
 #:                   : Change WRITE_LABEL label
+#: 08/02/20          : Change ADDEDBY label 
+#:                   : Change swap type option to ro
+#:                   : Log
 
 ## Variables
 PATH="/bin:/sbin:/usr/bin:/usr/sbin"
 TMP="/etc/fstab.$$.tmp"
-ADDEDBY="# by rbfstab"
-WRITE_LABEL="PESADES_RW"
+ADDEDBY="# by PESADES"
+WRITE_LABEL="PESADESRW"
 SCRIPT=/usr/sbin/${0##*/}
 RULE=/etc/udev/rules.d/fstab.rules
 
 ## Functions
+log()
+{
+    logger -it rbfstab "$1"
+}
+
+log "Initiated rbfstab"
+
 install_script()
 {
     echo "$0 first time run:"
@@ -48,9 +58,9 @@ install_script()
     cat << EOF > $RULE
 # Force fstab options for devices
 
-KERNEL=="sd*", RUN+="/usr/sbin/rbfstab"
-KERNEL=="sg*", RUN+="/usr/sbin/rbfstab"
-KERNEL=="fd*", ENV{ID_DRIVE_FLOPPY}="1", RUN+="/usr/sbin/rbfstab"
+KERNEL=="sd*", RUN+="/usr/sbin/rbfstab.sh"
+KERNEL=="sg*", RUN+="/usr/sbin/rbfstab.sh"
+KERNEL=="fd*", ENV{ID_DRIVE_FLOPPY}="1", RUN+="/usr/sbin/rbfstab.sh"
 EOF
     ## echo "* Restarting udev service"
     echo "* Reloading and triggering udev service rules"
@@ -59,7 +69,8 @@ EOF
     ## udevadm control --reload-rules
     ## udevadm trigger
     echo "Installation of $0 complete."
-    rbfstab
+    log "Installation of $0 complete."
+    /usr/sbin/rbfstab.sh
     exit 0
 }
 
@@ -69,6 +80,7 @@ remove_script()
     grep -v "$ADDEDBY" /etc/fstab > "$TMP"
     mv "$TMP" /etc/fstab
     echo "* Removed ${0##*/} rules from /etc/fstab"
+    log "* Removed ${0##*/} rules from /etc/fstab"
     ## remove_unused_dirs
     exit 0
 }
@@ -82,6 +94,7 @@ remove_unused_dirs()
         echo "$DEV" | grep -q /dev/$DIR
         [ $? = 0 ] || rmdir /media/$DIR
     done
+    log "Removed unused dirs"
 }
 
 usage()
@@ -197,7 +210,7 @@ show_sys_files,streams_interface=windows,allow_other" ;;
         reiserfs) OPTIONS="nolog,${OPTIONS}" ;;
         hfs) FSTYPE="hfsplus"; OPTIONS="${OPTIONS}" ;;
         hfsplus) OPTIONS="${OPTIONS}" ;;
-        swap) OPTIONS=rw,auto ;;
+        swap) OPTIONS=ro,auto ;;
     esac
 
     [ "$FSTYPE" = "ext3" ] && FSTYPE="ext2"
@@ -206,16 +219,19 @@ show_sys_files,streams_interface=windows,allow_other" ;;
     #if [ "$(blkid -s LABEL -o value "$DEVICE")" = "LABEL=\"$WRITE_LABEL\"" ]; then
     if [ "$(blkid -s LABEL -o value "$DEVICE")" = "$WRITE_LABEL" ]; then
         echo "\"$WRITE_LABEL\" save partition found at $DEVICE, write enabled."
+        log "$DEVICE in read write mode by default"
         OPTIONS="default"
     fi
 
     # Add modified mounting options to fstab
     printf "%-15s %-15s %-8s %-20s %-s\n" "$DEVICE" "$MOUNTPOINT" "$FSTYPE" "$OPTIONS" "0 0 $ADDEDBY" >> $TMP
+    log "Processed $DEVICE $MOUNTPOINT $FSTYPE $OPTIONS"
 done
 
 
 ## write new /etc/fstab
 mv $TMP /etc/fstab
+log "Updated fstab"
 
 ## remove process file for next run, remove unused dirs in /media
 rm -f /var/run/rbfstab.pid
