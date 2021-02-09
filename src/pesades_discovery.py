@@ -20,20 +20,22 @@
 """
 PESADES discovery engine.
 """
-#from blkinfo import *
-from pyudev import *
 
 def test_blkinfo():
+    from blkinfo import BlkDiskInfo
     myblkd = BlkDiskInfo()
     all_my_disks = myblkd.get_disks()
     for disk in all_my_disks:
         #print(disk['name'],disk['mountpoint'],disk['tran'],disk['vendor'], disk['model'], disk['statistics'])
-        print (disk)
+        print ("/dev/"+disk['name'], disk['vendor'], disk['model'], disk['serial'], str(round(int(disk['size'])/1000/1000/1000))+"GB", disk['tran'])
+        #print (disk.keys())
+        #print (disk)
 
-    print (all_my_disks[1].keys())
+    #print (all_my_disks[1].keys())
     # lsblk -n -l -o PATH,MOUNTPOINT,TYPE
 
 def test_pyudev():
+    from pyudev import Context
     context = Context()
     ignoredevices = ["loop", "ram", "nbd", "vbox"]
     for device in context.list_devices(subsystem='block', DEVTYPE='disk'):
@@ -46,7 +48,30 @@ def test_pyudev():
             #    print (key, device.properties[key])
             print (devname, idvendor, idmodel, idserialshort)
 
+def get_disks():
+    from pyudev import Context
+    from blkinfo import BlkDiskInfo
+    context = Context()
+    ignoredevices = ["loop", "ram", "nbd", "vbox"]
+    disks = []
+    for device in context.list_devices(subsystem='block', DEVTYPE='disk'):
+        name = device.properties['DEVNAME']
+        if not any([x in name for x in ignoredevices]):
+            model = device.get('ID_MODEL')
+            serial = device.get('ID_SERIAL_SHORT')
+            vendor = device.get('ID_VENDOR')
+            myblkd = BlkDiskInfo()
+            all_my_disks = myblkd.get_disks()
+            size = ""
+            transport = ""
+            for disk in all_my_disks:
+                if "/dev/"+disk['name'] == name:
+                    size = str(round(int(disk['size'])/1000/1000))
+                    transport = disk['tran']
+                    break
+            disks.append({"name":name, "vendor":vendor, "model":model, "serial":serial, "size":size, "transport":transport})
+    return disks
+
 if __name__ == "__main__":
-    print()
-    test_pyudev()
-    print()
+    for disk in get_disks():
+        print(disk)

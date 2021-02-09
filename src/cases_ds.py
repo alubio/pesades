@@ -22,7 +22,7 @@ Cases info module
 """
 from datetime import datetime
 from yaml import full_load, dump
-from devices_ds import thisdevice
+from evidences_ds import thisdevice
 
 cases = []
 """List of cases"""

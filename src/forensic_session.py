@@ -104,3 +104,72 @@ class ForensicSession():
     def end(self):
         """Session ending activities"""
         self.log("Session ended")
+
+def wipe_disk(disk, level=0):
+    if level == 0:
+        # Wipe partition table with zeros
+        shellexec("dd if=/dev/zero of="+disk+" bs=512 count=1")
+        return True
+    elif level == 1:
+        # Wipe all with zeros
+        shellexec("dd if=/dev/zero of="+disk+" bs=64K")
+        return True
+    elif level == 2:
+        # Wipe all with random
+        shellexec("dd if=/dev/urandom of="+disk+" bs=64K")
+        return True
+    elif level == 3:
+        # Wipe all with shred
+        shellexec("shred "+disk)
+        return True
+    else:
+        return False
+
+def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
+    shellexec("umount "+disk+"1")
+    print("Umounted "+disk)
+    if wipe:
+        if not wipe_disk(disk, level=0):
+            print("Problem wiping "+disk)
+            return False
+        else:
+            print("Wiped "+disk)
+    if format == 'ntfs':
+        r,o,e = shellexec("parted -s -m -a optimal "+disk+" mklabel gpt")
+        if r != 0:
+            print("Problem creating GPT label in "+disk)
+            print(o)
+            print(e)
+            return False
+        else:
+            print("Created GPT label in "+disk)
+        r,o,e = shellexec("parted -s -m -a optimal "+disk+" mkpart primary ntfs 0% 100%")
+        if r != 0:
+            print("Problem creating primary NTFS partition in "+disk)
+            print(o)
+            print(e)
+            return False
+        else:
+            print("Created primary NTFS partition in "+disk)
+        import time
+        time.sleep(5)
+        if fast:
+            r,o,e = shellexec("mkfs.ntfs -f -L "+label+" "+disk+"1")
+        else:
+            r,o,e = shellexec("mkfs.ntfs -L "+label+" "+disk+"1")
+        if r != 0:
+            print("Problem NTFS formatting "+disk+"1")
+            print(o)
+            print(e)
+            return False
+        else:
+            print("NTFS formatted "+disk+"1")
+        return True
+    elif format == 'ext4':
+        # TODO
+        return False
+    else:
+        return False
+
+if __name__ == "__main__":
+    print(format_disk("/dev/sdg"))
