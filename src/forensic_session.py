@@ -105,52 +105,57 @@ class ForensicSession():
         """Session ending activities"""
         self.log("Session ended")
 
+fsession = ForensicSession()
+"""Forensic session related information"""
+
 def wipe_disk(disk, level=0):
+    """Wipes the disk"""
     if level == 0:
         # Wipe partition table with zeros
         shellexec("dd if=/dev/zero of="+disk+" bs=512 count=1")
+        fsession.log("Wiped with zeros partition table of "+disk)
         return True
     elif level == 1:
         # Wipe all with zeros
         shellexec("dd if=/dev/zero of="+disk+" bs=64K")
+        fsession.log("Wiped "+disk+" with zeros")
         return True
     elif level == 2:
         # Wipe all with random
         shellexec("dd if=/dev/urandom of="+disk+" bs=64K")
+        fsession.log("Wiped "+disk+" with randomness")
         return True
     elif level == 3:
         # Wipe all with shred
         shellexec("shred "+disk)
+        fsession.log("Hard wiped "+disk+" with shred")
         return True
     else:
         return False
 
 def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
+    """Formats de disk and returns the UUID, 0 if fails """
     shellexec("umount "+disk+"1")
-    print("Umounted "+disk)
+    fsession.log("Umounted "+disk)
     if wipe:
         if not wipe_disk(disk, level=0):
-            print("Problem wiping "+disk)
-            return False
+            fsession.log("Problem wiping "+disk)
+            return 0
         else:
             print("Wiped "+disk)
     if format == 'ntfs':
         r,o,e = shellexec("parted -s -m -a optimal "+disk+" mklabel gpt")
         if r != 0:
-            print("Problem creating GPT label in "+disk)
-            print(o)
-            print(e)
-            return False
+            fsession.log("Problem creating GPT label in "+disk)
+            return 0
         else:
-            print("Created GPT label in "+disk)
+            fsession.log("Created GPT label in "+disk)
         r,o,e = shellexec("parted -s -m -a optimal "+disk+" mkpart primary ntfs 0% 100%")
         if r != 0:
-            print("Problem creating primary NTFS partition in "+disk)
-            print(o)
-            print(e)
-            return False
+            fsession.log("Problem creating primary NTFS partition in "+disk)
+            return 0
         else:
-            print("Created primary NTFS partition in "+disk)
+            fsession.log("Created primary NTFS partition in "+disk)
         import time
         time.sleep(5)
         if fast:
@@ -158,18 +163,16 @@ def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
         else:
             r,o,e = shellexec("mkfs.ntfs -L "+label+" "+disk+"1")
         if r != 0:
-            print("Problem NTFS formatting "+disk+"1")
-            print(o)
-            print(e)
-            return False
+            fsession.log("Problem NTFS formatting "+disk+"1")
+            return 0
         else:
-            print("NTFS formatted "+disk+"1")
+            fsession.log("NTFS formatted "+disk+"1")
         return True
     elif format == 'ext4':
         # TODO
-        return False
+        return 0
     else:
-        return False
+        return 0
 
 if __name__ == "__main__":
     print(format_disk("/dev/sdg"))

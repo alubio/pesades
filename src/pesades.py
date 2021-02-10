@@ -90,9 +90,6 @@ from pesades_crypto import *
 from operators_ds import *
 from cases_ds import *
 
-fsession = ForensicSession()
-"""Forensic session related information"""
-
 # 0.1.1 Initial version
 # 0.1.2 License modified to GPLv3
 __version__ = "0.1.2"
