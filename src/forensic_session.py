@@ -53,7 +53,7 @@ class ForensicSession():
     def log(self, message):
         """Log session messages into session logging file"""
         self.sessionlog.append(str(datetime.now())+": "+message)
-        self.case.log(message)
+        # TODO self.case.log(message)
         info(message)
 
     def set_case(self, casename):
@@ -142,14 +142,14 @@ def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
             fsession.log("Problem wiping "+disk)
             return 0
         else:
-            print("Wiped "+disk)
+            fsession.log("Wiped "+disk)
+    r,o,e = shellexec("parted -s -m -a optimal "+disk+" mklabel gpt")
+    if r != 0:
+        fsession.log("Problem creating GPT label in "+disk)
+        return 0
+    else:
+        fsession.log("Created GPT label in "+disk)
     if format == 'ntfs':
-        r,o,e = shellexec("parted -s -m -a optimal "+disk+" mklabel gpt")
-        if r != 0:
-            fsession.log("Problem creating GPT label in "+disk)
-            return 0
-        else:
-            fsession.log("Created GPT label in "+disk)
         r,o,e = shellexec("parted -s -m -a optimal "+disk+" mkpart primary ntfs 0% 100%")
         if r != 0:
             fsession.log("Problem creating primary NTFS partition in "+disk)
@@ -157,7 +157,7 @@ def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
         else:
             fsession.log("Created primary NTFS partition in "+disk)
         import time
-        time.sleep(5)
+        time.sleep(2)
         if fast:
             r,o,e = shellexec("mkfs.ntfs -f -L "+label+" "+disk+"1")
         else:
@@ -167,12 +167,35 @@ def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
             return 0
         else:
             fsession.log("NTFS formatted "+disk+"1")
-        return True
+        time.sleep(2)
+        r,o,e = shellexec("lsblk -n -o UUID "+disk+"1")
+        if r != 0:
+            fsession.log("Problem getting UUID of "+disk+"1. The disk should be formatted")
+            return 0
+        return o
     elif format == 'ext4':
-        # TODO
-        return 0
+        r,o,e = shellexec("parted -s -m -a optimal "+disk+" mkpart primary ext4 0% 100%")
+        if r != 0:
+            fsession.log("Problem creating primary ext4 partition in "+disk)
+            return 0
+        else:
+            fsession.log("Created primary ext4 partition in "+disk)
+        import time
+        time.sleep(2)
+        r,o,e = shellexec("mkfs.ext4 -L "+label+" "+disk+"1")
+        if r != 0:
+            fsession.log("Problem ext4 formatting "+disk+"1")
+            return 0
+        else:
+            fsession.log("ext4 formatted "+disk+"1")
+        time.sleep(2)
+        r,o,e = shellexec("lsblk -n -o UUID "+disk+"1")
+        if r != 0:
+            fsession.log("Problem getting UUID of "+disk+"1. The disk should be formatted")
+            return 0
+        return o
     else:
         return 0
 
 if __name__ == "__main__":
-    print(format_disk("/dev/sdg"))
+    print(format_disk("/dev/sdc", format='ext4'))

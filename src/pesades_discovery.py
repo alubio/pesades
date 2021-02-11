@@ -48,10 +48,22 @@ def test_pyudev():
             #    print (key, device.properties[key])
             print (devname, idvendor, idmodel, idserialshort)
 
+"""
+Some useful linux commands:
+cat /sys/block/sdb/device/model
+cat /sys/block/sdb/device/vendor
+lsblk --json -o SIZE,FSTYPE,LABEL,UUID,MOUNTPOINT /dev/sdb1
+udevadm info --query=all --name=/dev/sda
+blockdev --getsize64 /dev/sdf
+sudo fdisk -l /dev/sda
+sudo ./ftkimager --print-info /dev/sdb
+"""
 def get_disks():
     from pyudev import Context
     from blkinfo import BlkDiskInfo
     context = Context()
+    myblkd = BlkDiskInfo()
+    all_my_disks = myblkd.get_disks()
     ignoredevices = ["loop", "ram", "nbd", "vbox"]
     disks = []
     for device in context.list_devices(subsystem='block', DEVTYPE='disk'):
@@ -60,8 +72,6 @@ def get_disks():
             model = device.get('ID_MODEL')
             serial = device.get('ID_SERIAL_SHORT')
             vendor = device.get('ID_VENDOR')
-            myblkd = BlkDiskInfo()
-            all_my_disks = myblkd.get_disks()
             size = ""
             transport = ""
             for disk in all_my_disks:
