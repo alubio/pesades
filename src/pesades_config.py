@@ -21,5 +21,6 @@
 PESADES configmain module.
 """
 
+ipath = "/home/ivan/Code/pesades" # Installation path
 NTPserver1 = "hora.roa.es"
 NTPserver2 = "minuto.roa.es"

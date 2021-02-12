@@ -27,7 +27,7 @@ from operators_ds import load_operators
 from cases_ds import load_cases
 from datetime import datetime
 from pesades_aux import stringsinshellexec, shellexec
-from pesades_config import NTPserver1, NTPserver2
+from pesades_config import NTPserver1, NTPserver2, ipath
 
 class ForensicSession():
     """Forensic session management"""
@@ -146,6 +146,7 @@ def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
     r,o,e = shellexec("parted -s -m -a optimal "+disk+" mklabel gpt")
     if r != 0:
         fsession.log("Problem creating GPT label in "+disk)
+        fsession.log(e+o)
         return 0
     else:
         fsession.log("Created GPT label in "+disk)
@@ -197,5 +198,114 @@ def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
     else:
         return 0
 
+def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
+    from os import path, mkdir, remove
+    directory = dst+"/"+caseid
+    fsession.log("Initiating acquisition of disk "+disk+" into "+directory)
+    if not path.isdir(directory):
+        try:
+            mkdir(directory)
+        except OSError:
+            fsession.log("Problem acquiring disk "+disk+" into "+directory+
+                            ". Failed to create the case directory.")
+        else:
+            fsession.log("Created directory "+directory+" to store evidence "+evidenceid)
+    file = directory+"/"+evidenceid
+    if path.isfile(file+".E01"):
+        fsession.log("Problem acquiring disk "+disk+" into "+directory+
+                        ". The acquisition already exists")
+        return False
+    fsession.log ("Calculating original pre hashes of "+disk)
+    premd5 = md5sum(disk)
+    fsession.log ("Original pre MD5 hash: "+premd5)
+    presha1 = sha1sum(disk)
+    fsession.log ("Original pre SHA1 hash: "+presha1)
+    fsession.log ("Acquiring "+disk+" into "+directory)
+    if format == 'E01':
+        r,o,e = shellexec(ipath+"/SO/ftkimager "+disk+" "+file+" --quiet --e01 --compress 9"+
+                           " --case-number "+caseid+
+                           " --evidence-number "+evidenceid+
+                           " --description "+desc+
+                           " --examiner " +operator)
+        if r != 0:
+            fsession.log("Problem acquiring in E01 format of "+disk+" into "+directory)
+            fsession.log(e)
+            return False
+        else:
+            compmd5, compsha1 = get_computed_hashes(file+".E01.txt")
+    elif format == 'RAW':
+        r,o,e = shellexec(ipath+"/SO/ftkimager "+disk+" "+file+" --quiet")
+        if r != 0:
+            fsession.log("Problem acquiring in RAW format of "+disk+" into "+directory)
+            fsession.log(e)
+            return False
+        else:
+            compmd5, compsha1 = get_computed_hashes(file+".001.txt")
+    else:
+        return False
+    
+    fsession.log ("Image computed MD5 hash: "+compmd5)
+    fsession.log ("Image computed SHA1 hash: "+compsha1)
+    fsession.log ("Calculating original post hashes of "+disk)
+    postmd5 = md5sum(disk)
+    postsha1 = sha1sum(disk)
+    fsession.log ("Original post MD5 hash: "+postmd5)
+    fsession.log ("Original post SHA1 hash: "+postsha1)
+    # Test hashes
+    if premd5 == compmd5 == postmd5:
+        if presha1 == compsha1 == postsha1:
+            fsession.log("Disk "+disk+" acquired into "+directory)
+            if verify_acquisition("/media/sdb1/case123/evi1000.001"):
+                return True
+    # Hashes differ, advice and remove images
+    fsession.log("Problem acquiring disk "+disk+" into "+directory+"Hashes differ !!!")
+    if path.isfile(file+".E01"):
+        remove(file+".E01")
+    if path.isfile(file+".E01.txt"):
+        remove(file+".E01.txt")
+    if path.isfile(file+".001"):
+        remove(file+".001")
+    if path.isfile(file+".001.txt"):
+        remove(file+".001.txt")
+    return False
+    
+def verify_acquisition(file):
+    r,o,e = shellexec(ipath+"/SO/ftkimager --verify "+file)
+    if r != 0:
+        fsession.log("Problem verifying acquisition in "+file)
+        fsession.log(o)
+        return False
+    else:
+        fsession.log("Verified acquisition in "+file)
+        return True
+
+def md5sum(disk):
+    r,o,e = shellexec("md5sum "+disk)
+    if r != 0:
+        fsession.log("Problem calculating MD5 hash from "+disk)
+        fsession.log(e)
+        return 0
+    else:
+        return o.strip().split(' ')[0]
+
+def sha1sum(disk):
+    r,o,e = shellexec("sha1sum "+disk)
+    if r != 0:
+        fsession.log("Problem calculating SHA1 hash from "+disk)
+        fsession.log(e)
+        return 0
+    else:
+        return o.strip().split(' ')[0]
+
+def get_computed_hashes(file):
+    with open(file) as f:
+        lines = f.readlines()
+        for i in range(len(lines)):
+            if "Computed Hashes" in lines[i]:
+                return lines[i+1].strip().split(' ')[5], lines[i+2].strip().split(' ')[4]
+
+
 if __name__ == "__main__":
-    print(format_disk("/dev/sdc", format='ext4'))
+    #print(acquire_disk("/dev/sdc", "/media/sdb1", "case123", "evi1000", "disco", "oper",format='RAW'))
+    print()
+   
