@@ -35,7 +35,7 @@ class Operator():
         """Operator's username"""
         self.fullname = fullname
         """Operator's fullname"""
-        self.create_date = datetime.now()
+        self.create_date = datetime.utcnow()
         """Create date of the operator"""
         self.organization = organization
         """Operator's organization"""

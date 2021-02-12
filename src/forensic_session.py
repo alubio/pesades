@@ -22,7 +22,7 @@ PESDES forensic specific classes.
 """
 
 from logging import basicConfig, info, INFO
-basicConfig(filename='src/ds/session.log', format='%(asctime)s:session:%(levelname)s:%(message)s', level=INFO)
+basicConfig(filename='src/ds/session.log', format='%(asctime)s:session:%(levelname)s:%(message)s', level=INFO, datefmt="%Y-%m-%dT%H:%M:%S%z")
 from operators_ds import load_operators
 from cases_ds import load_cases
 from datetime import datetime
@@ -52,8 +52,9 @@ class ForensicSession():
     
     def log(self, message):
         """Log session messages into session logging file"""
-        self.sessionlog.append(str(datetime.now())+": "+message)
-        # TODO self.case.log(message)
+        logentry = str(datetime.utcnow().isoformat())+": "+message
+        self.sessionlog.append(logentry)
+        # TODO self.case.log(logentry)
         info(message)
 
     def set_case(self, casename):
@@ -230,6 +231,10 @@ def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
         if r != 0:
             fsession.log("Problem acquiring in E01 format of "+disk+" into "+directory)
             fsession.log(e)
+            if path.isfile(file+".E01"):
+                remove(file+".E01")
+            if path.isfile(file+".E01.txt"):
+                remove(file+".E01.txt")
             return False
         else:
             compmd5, compsha1 = get_computed_hashes(file+".E01.txt")
@@ -238,6 +243,10 @@ def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
         if r != 0:
             fsession.log("Problem acquiring in RAW format of "+disk+" into "+directory)
             fsession.log(e)
+            if path.isfile(file+".001"):
+                remove(file+".001")
+            if path.isfile(file+".001.txt"):
+                remove(file+".001.txt")
             return False
         else:
             compmd5, compsha1 = get_computed_hashes(file+".001.txt")
@@ -258,7 +267,10 @@ def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
             if verify_acquisition("/media/sdb1/case123/evi1000.001"):
                 return True
     # Hashes differ, advice and remove images
-    fsession.log("Problem acquiring disk "+disk+" into "+directory+"Hashes differ !!!")
+    if premd5 == postmd5:
+        fsession.log("Problem acquiring disk "+disk+" into "+directory+". Hashes of the image differ from the original")
+    else:
+        fsession.log("Problem acquiring disk "+disk+" into "+directory+". The original disk has been modified !!!")
     if path.isfile(file+".E01"):
         remove(file+".E01")
     if path.isfile(file+".E01.txt"):
@@ -304,8 +316,4 @@ def get_computed_hashes(file):
             if "Computed Hashes" in lines[i]:
                 return lines[i+1].strip().split(' ')[5], lines[i+2].strip().split(' ')[4]
 
-
-if __name__ == "__main__":
-    #print(acquire_disk("/dev/sdc", "/media/sdb1", "case123", "evi1000", "disco", "oper",format='RAW'))
-    print()
    

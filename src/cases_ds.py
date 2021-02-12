@@ -43,9 +43,9 @@ class Case():
         """Notary or witness email"""
         self.notary_email = notary_email
         """Notary or witness of the case"""
-        self.open_date = datetime.now()
+        self.open_date = datetime.utcnow()
         """Opening date of the case"""
-        self.incident_date = datetime.now()
+        self.incident_date = datetime.utcnow()
         """Incident ocuring date"""
         self.evidences = []
         """Known evidences like pen drives, PCs, laptops, IP addresses, URLs, etc."""
@@ -64,7 +64,7 @@ class Case():
 
     def log(self, message):
         """Log session messages into session logging file"""
-        self.caselog.append(str(datetime.now())+": "+message)
+        self.caselog.append(str(datetime.utcnow())+": "+message)
 
     def add_this_device(self):
         """The device where PESADES is running is an evidence"""

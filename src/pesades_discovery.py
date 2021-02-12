@@ -81,7 +81,3 @@ def get_disks():
                     break
             disks.append({"name":name, "vendor":vendor, "model":model, "serial":serial, "size":size, "transport":transport})
     return disks
-
-if __name__ == "__main__":
-    for disk in get_disks():
-        print(disk)
