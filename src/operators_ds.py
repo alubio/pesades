@@ -79,12 +79,12 @@ def load_operators():
         print ("ERROR: operators_ds: load_operators")
         return
 
-def store_operator(username, fullname, organization, phone, email, password):
+def store_operator(username, fullname, organization, role, phone, email, password):
     """Store a new operator"""
     # Check not duplicate username
     for operator in operators:
         if username == operator.username:
             return "Username already exists. Please select another one."
-    Operator(username, fullname, organization, phone, email, password)
+    Operator(username, fullname, organization, role, phone, email, password)
     save_operators()
     return "OK"

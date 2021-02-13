@@ -200,6 +200,9 @@ def format_disk(disk, format='ntfs', label='PESADESRW', fast=True, wipe=True):
         return 0
 
 def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
+    if format != 'E01' and format != '001':
+        fsession.log("Unknown acquisition format")
+        return False
     from os import path, mkdir, remove
     directory = dst+"/"+caseid
     fsession.log("Initiating acquisition of disk "+disk+" into "+directory)
@@ -212,10 +215,16 @@ def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
         else:
             fsession.log("Created directory "+directory+" to store evidence "+evidenceid)
     file = directory+"/"+evidenceid
-    if path.isfile(file+".E01"):
-        fsession.log("Problem acquiring disk "+disk+" into "+directory+
-                        ". The acquisition already exists")
-        return False
+    if format == "E01":
+        if path.isfile(file+".E01"):
+            fsession.log("Problem acquiring disk "+disk+" into "+directory+
+                            ". The acquisition already exists")
+            return False
+    elif format == "001":
+        if path.isfile(file+".001"):
+            fsession.log("Problem acquiring disk "+disk+" into "+directory+
+                            ". The acquisition already exists")
+            return False
     fsession.log ("Calculating original pre hashes of "+disk)
     premd5 = md5sum(disk)
     fsession.log ("Original pre MD5 hash: "+premd5)
@@ -264,8 +273,12 @@ def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
     if premd5 == compmd5 == postmd5:
         if presha1 == compsha1 == postsha1:
             fsession.log("Disk "+disk+" acquired into "+directory)
-            if verify_acquisition("/media/sdb1/case123/evi1000.001"):
-                return True
+            if format == "E01":
+                if verify_acquisition(file+".E01.txt"):
+                    return True
+            elif format == "001":
+                if verify_acquisition(file+".001.txt"):
+                    return True
     # Hashes differ, advice and remove images
     if premd5 == postmd5:
         fsession.log("Problem acquiring disk "+disk+" into "+directory+". Hashes of the image differ from the original")
@@ -280,7 +293,78 @@ def acquire_disk(disk, dst, caseid, evidenceid, desc, operator, format='E01'):
     if path.isfile(file+".001.txt"):
         remove(file+".001.txt")
     return False
-    
+
+def acquire_file(src, dst, caseid, evidenceid, desc, operator):
+    from os import path, mkdir, remove, stat
+    directory = dst+"/"+caseid
+    fsession.log("Initiating acquisition of file "+src+" into "+directory)
+    start = datetime.utcnow()
+    if not path.isdir(directory):
+        try:
+            mkdir(directory)
+        except OSError:
+            fsession.log("Problem acquiring file "+src+" into "+directory+
+                            ". Failed to create the case directory.")
+        else:
+            fsession.log("Created directory "+directory+" to store evidence "+evidenceid)
+    srcwopath = path.basename(src)
+    file = directory+"/"+srcwopath
+    if path.isfile(file):
+        fsession.log("Problem acquiring file "+src+" into "+directory+
+                        ". The acquisition already exists")
+        return False
+    # Check file type of the new file. We can only process regular files,
+    # no directories or special files allowed.
+    if not path.isfile(src):
+        fsession.log("File doesn't exist or not a regular file "+src)
+        return False
+    fsession.log ("Calculating original pre hashes of "+src)
+    premd5 = md5sum(src)
+    fsession.log ("Original pre MD5 hash: "+premd5)
+    presha1 = sha1sum(src)
+    fsession.log ("Original pre SHA1 hash: "+presha1)
+    # Copy evidence preserving attributes if possible
+    r,o,e = shellexec("cp --preserve=all "+src+" "+file)
+
+    fsession.log ("Calculating original post hashes of "+src)
+    postmd5 = md5sum(src)
+    postsha1 = sha1sum(src)
+    fsession.log ("Original post MD5 hash: "+postmd5)
+    fsession.log ("Original post SHA1 hash: "+postsha1)
+    # Test hashes
+    if premd5 == postmd5:
+        if presha1 == postsha1:
+            # Create txt file with acquisition info in ftkimager style
+            with open (directory+"/"+srcwopath+".txt", "w") as info:
+                info.write("Case Information: "+"\n")
+                info.write("Acquired using: cp"+"\n")
+                info.write("Case Number: "+caseid+"\n")
+                info.write("Evidence Number: "+evidenceid+"\n")
+                info.write("Unique description: "+desc+"\n")
+                info.write("Examiner: "+operator+"\n")
+                info.write("Notes: "+"\n")
+                info.write(""+"\n")
+                info.write("--------------------------------------------------------------"+"\n")
+                info.write(""+"\n")
+                info.write("Information for "+path.abspath(src)+":\n")
+                info.write(""+"\n")
+                info.write("[File Attributes]"+"\n")
+                info.write(""+"\n") # TODO
+                info.write("[Computed Hashes]"+"\n")
+                info.write(" MD5 checksum:  "+premd5+"\n")
+                info.write(" SHA1 checksum: "+presha1+"\n")
+                info.write(""+"\n")
+                info.write("Image Information:"+"\n")
+                info.write(" Acquisition started:  "+start.ctime()+"\n")
+                info.write(" Acquisition finished: "+datetime.utcnow().ctime()+"\n")
+                fsession.log("File "+src+" acquired into "+directory)
+            return True
+    # Hashes differ, advice and remove images
+    fsession.log("Problem acquiring file "+src+" into "+directory+". The original file has been modified !!!")
+    if path.isfile(file):
+        remove(file)
+    return False
+
 def verify_acquisition(file):
     r,o,e = shellexec(ipath+"/SO/ftkimager --verify "+file)
     if r != 0:
@@ -291,19 +375,19 @@ def verify_acquisition(file):
         fsession.log("Verified acquisition in "+file)
         return True
 
-def md5sum(disk):
-    r,o,e = shellexec("md5sum "+disk)
+def md5sum(file):
+    r,o,e = shellexec("md5sum "+file)
     if r != 0:
-        fsession.log("Problem calculating MD5 hash from "+disk)
+        fsession.log("Problem calculating MD5 hash from "+file)
         fsession.log(e)
         return 0
     else:
         return o.strip().split(' ')[0]
 
-def sha1sum(disk):
-    r,o,e = shellexec("sha1sum "+disk)
+def sha1sum(file):
+    r,o,e = shellexec("sha1sum "+file)
     if r != 0:
-        fsession.log("Problem calculating SHA1 hash from "+disk)
+        fsession.log("Problem calculating SHA1 hash from "+file)
         fsession.log(e)
         return 0
     else:
@@ -316,4 +400,5 @@ def get_computed_hashes(file):
             if "Computed Hashes" in lines[i]:
                 return lines[i+1].strip().split(' ')[5], lines[i+2].strip().split(' ')[4]
 
-   
+if __name__ == "__main__":
+    print(acquire_file("LICENSE", "/media/sdb1", "case12", "ev14", "desc", "opera")) 
