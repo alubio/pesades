@@ -349,7 +349,16 @@ def acquire_file(src, dst, caseid, evidenceid, desc, operator):
                 info.write("Information for "+path.abspath(src)+":\n")
                 info.write(""+"\n")
                 info.write("[File Attributes]"+"\n")
-                info.write(""+"\n") # TODO
+                st = stat(src)
+                print(st)
+                info.write("Size:  "+str(st.st_size)+"\n")
+                info.write("UID:   "+str(st.st_uid)+"\n")
+                info.write("GID:   "+str(st.st_gid)+"\n")
+                info.write("Last Modification Time:                "+datetime.fromtimestamp(st.st_mtime).ctime()+"\n")
+                info.write("Last Access Time:                      "+datetime.fromtimestamp(st.st_atime).ctime()+"\n")
+                info.write("Creation or Last metadata change Time: "+datetime.fromtimestamp(st.st_ctime).ctime()+"\n")
+                # TODO
+                info.write(""+"\n")
                 info.write("[Computed Hashes]"+"\n")
                 info.write(" MD5 checksum:  "+premd5+"\n")
                 info.write(" SHA1 checksum: "+presha1+"\n")
