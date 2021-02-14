@@ -325,53 +325,64 @@ def acquire_file(src, dst, caseid, evidenceid, desc, operator):
     fsession.log ("Original pre SHA1 hash: "+presha1)
     # Copy evidence preserving attributes if possible
     r,o,e = shellexec("cp --preserve=all "+src+" "+file)
+    # Create txt file with acquisition info in ftkimager style
+    with open (file+".txt", "w") as info:
+        info.write("Case Information: "+"\n")
+        info.write("Acquired using: cp"+"\n")
+        info.write("Case Number: "+caseid+"\n")
+        info.write("Evidence Number: "+evidenceid+"\n")
+        info.write("Unique description: "+desc+"\n")
+        info.write("Examiner: "+operator+"\n")
+        info.write("Notes: "+"\n")
+        info.write(""+"\n")
+        info.write("--------------------------------------------------------------"+"\n")
+        info.write(""+"\n")
+        info.write("Information for "+path.abspath(src)+":\n")
+        info.write(""+"\n")
+        info.write("[File Attributes]"+"\n")
+        st = stat(src)
+        print(st)
+        info.write("Size:  "+str(st.st_size)+"\n")
+        info.write("UID:   "+str(st.st_uid)+"\n")
+        info.write("GID:   "+str(st.st_gid)+"\n")
+        info.write("Last Modification Time:                "+datetime.fromtimestamp(st.st_mtime).ctime()+"\n")
+        info.write("Last Access Time:                      "+datetime.fromtimestamp(st.st_atime).ctime()+"\n")
+        info.write("Creation or Last metadata change Time: "+datetime.fromtimestamp(st.st_ctime).ctime()+"\n")
+        info.write("Mode:                                  "+stat.filemode(st.st_mode)+"\n")
+        # TODO
+        info.write(""+"\n")
+        info.write("[Computed Hashes]"+"\n")
+        info.write(" MD5 checksum:  "+premd5+"\n")
+        info.write(" SHA1 checksum: "+presha1+"\n")
+        info.write(""+"\n")
+        info.write("Image Information:"+"\n")
+        info.write(" Acquisition started:  "+start.ctime()+"\n")
+        info.write(" Acquisition finished: "+datetime.utcnow().ctime()+"\n")
 
     fsession.log ("Calculating original post hashes of "+src)
     postmd5 = md5sum(src)
     postsha1 = sha1sum(src)
     fsession.log ("Original post MD5 hash: "+postmd5)
     fsession.log ("Original post SHA1 hash: "+postsha1)
+    fsession.log ("Calculating acquired evidence hashes in "+file)
+    compmd5 = md5sum(file)
+    compsha1 = sha1sum(file)
+    fsession.log ("Acquired MD5 hash: "+compmd5)
+    fsession.log ("Acquired SHA1 hash: "+compsha1)
     # Test hashes
-    if premd5 == postmd5:
-        if presha1 == postsha1:
-            # Create txt file with acquisition info in ftkimager style
-            with open (directory+"/"+srcwopath+".txt", "w") as info:
-                info.write("Case Information: "+"\n")
-                info.write("Acquired using: cp"+"\n")
-                info.write("Case Number: "+caseid+"\n")
-                info.write("Evidence Number: "+evidenceid+"\n")
-                info.write("Unique description: "+desc+"\n")
-                info.write("Examiner: "+operator+"\n")
-                info.write("Notes: "+"\n")
-                info.write(""+"\n")
-                info.write("--------------------------------------------------------------"+"\n")
-                info.write(""+"\n")
-                info.write("Information for "+path.abspath(src)+":\n")
-                info.write(""+"\n")
-                info.write("[File Attributes]"+"\n")
-                st = stat(src)
-                print(st)
-                info.write("Size:  "+str(st.st_size)+"\n")
-                info.write("UID:   "+str(st.st_uid)+"\n")
-                info.write("GID:   "+str(st.st_gid)+"\n")
-                info.write("Last Modification Time:                "+datetime.fromtimestamp(st.st_mtime).ctime()+"\n")
-                info.write("Last Access Time:                      "+datetime.fromtimestamp(st.st_atime).ctime()+"\n")
-                info.write("Creation or Last metadata change Time: "+datetime.fromtimestamp(st.st_ctime).ctime()+"\n")
-                # TODO
-                info.write(""+"\n")
-                info.write("[Computed Hashes]"+"\n")
-                info.write(" MD5 checksum:  "+premd5+"\n")
-                info.write(" SHA1 checksum: "+presha1+"\n")
-                info.write(""+"\n")
-                info.write("Image Information:"+"\n")
-                info.write(" Acquisition started:  "+start.ctime()+"\n")
-                info.write(" Acquisition finished: "+datetime.utcnow().ctime()+"\n")
+    if premd5 == postmd5 == compmd5:
+        if presha1 == postsha1 == compsha1:
                 fsession.log("File "+src+" acquired into "+directory)
             return True
     # Hashes differ, advice and remove images
-    fsession.log("Problem acquiring file "+src+" into "+directory+". The original file has been modified !!!")
+    if premd5 == postmd5:
+        fsession.log("Problem acquiring file "+src+" into "+directory+". Hashes of the acquired file differ from the original")
+    else:
+        fsession.log("Problem acquiring file "+src+" into "+directory+". The original file has been modified !!!")
     if path.isfile(file):
         remove(file)
+    if path.isfile(file+".txt"):
+        remove(file+".txt")
     return False
 
 def verify_acquisition(file):
