@@ -372,7 +372,7 @@ def acquire_file(src, dst, caseid, evidenceid, desc, operator):
     # Test hashes
     if premd5 == postmd5 == compmd5:
         if presha1 == postsha1 == compsha1:
-                fsession.log("File "+src+" acquired into "+directory)
+            fsession.log("File "+src+" acquired into "+directory)
             return True
     # Hashes differ, advice and remove images
     if premd5 == postmd5:

@@ -241,7 +241,7 @@ class NewOperatorDlg(QDialog):
 
         # Validation OK
         # Store new operator
-        result = store_operator(self.ui.Username.text(), self.ui.Fullname.text(), self.ui.Organization.text(), self.ui.Phone.text(), self.ui.Email.text(), get_hashedpassword(self.ui.Password1.text()))
+        result = store_operator(self.ui.Username.text(), self.ui.Fullname.text(), self.ui.Organization.text(), self.ui.Role.text(), self.ui.Phone.text(), self.ui.Email.text(), get_hashedpassword(self.ui.Password1.text()))
         if result == "OK":
             fsession.log("Operator "+self.ui.Username.text()+" created")
             fsession.operator = self.ui.Username.text()
