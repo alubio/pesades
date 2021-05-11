@@ -1,4 +1,5 @@
 - !!python/object:operators_ds.Operator
+<<<<<<< HEAD
   create_date: 2021-05-11 18:16:43.600186
   email: asd@asd.com
   fullname: "Iv\xE1n Paniagua Barrilero"
@@ -7,3 +8,13 @@
   phone: '+1232323123'
   role: Dev
   username: ipaniagua
+=======
+  create_date: 2021-02-15 11:56:25.738442
+  email: testnotuse@example.com
+  fullname: testnotuse
+  organization: testnotuse
+  password: testnotuse
+  phone: '+34919191919'
+  role: admin
+  username: testnotuse
+>>>>>>> 77e5ea7deacc991db5d7a87e119fa1fd9585682f

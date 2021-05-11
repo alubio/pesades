@@ -30,3 +30,4 @@ def test_shellexec():
 def test_stringsinshellexec():
     assert stringsinshellexec("echo hola adios", ["hola"]) == True
     assert stringsinshellexec("echo hola adios", ["hola","adios"]) == True
+    assert stringsinshellexec("echo hola adios", ["hola","adios","pepe"]) == False
