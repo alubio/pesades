@@ -21,7 +21,7 @@
 Operators info module
 """
 from datetime import datetime
-from yaml import full_load, dump
+from yaml import load, dump, Loader
 from pesades_crypto import is_passwordok
 
 operators = []
@@ -52,6 +52,7 @@ class Operator():
         operators.append(self)
 
 def check_userpassword(username, password):
+    global operators
     for operator in operators:
         if username == operator.username:
             if is_passwordok(password, operator.password):
@@ -60,6 +61,7 @@ def check_userpassword(username, password):
 
 def save_operators():
     """Write operators list to file"""
+    global operators
     try:
         with open("src/ds/operators.yaml", 'w+') as file:
             dump(operators, file)
@@ -73,14 +75,17 @@ def load_operators():
     global operators
     try:
         with open("src/ds/operators.yaml") as file:
-            operators = full_load(file)
-    except:
+            operators = load(file, Loader=Loader)
+            if not operators:
+                operators = []
+    except Exception as e:
         # TODO Manage exception
-        print ("ERROR: operators_ds: load_operators")
+        print ("ERROR: operators_ds: load_operators"+str(e))
         return
 
 def store_operator(username, fullname, organization, role, phone, email, password):
     """Store a new operator"""
+    global operators
     # Check not duplicate username
     for operator in operators:
         if username == operator.username:

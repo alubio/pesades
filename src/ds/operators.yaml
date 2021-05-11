@@ -1,9 +1,9 @@
 - !!python/object:operators_ds.Operator
-  create_date: 2021-02-14 09:13:22.523385
-  email: testnotuse@example.com
-  fullname: testnotuse
-  organization: testnotuse
-  password: testnotuse
-  phone: '+34919191919'
-  role: admin
-  username: testnotuse
+  create_date: 2021-05-11 18:16:43.600186
+  email: asd@asd.com
+  fullname: "Iv\xE1n Paniagua Barrilero"
+  organization: PESADES
+  password: Ks5bd6cpcs+0E7YZqJdZIq/0ZAWZMdoXHPbCRYQMd2/Th36ePXVbpQu8w+OpOgRBfj2OxnW0LteUGbmiI9ONkQ==
+  phone: '+1232323123'
+  role: Dev
+  username: ipaniagua

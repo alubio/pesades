@@ -127,8 +127,8 @@ class NewCaseDlg(QDialog):
             self.ui.Notary_name.setText(str(case.notary_name))
             self.ui.Notary_phone.setText(str(case.notary_phone))
             self.ui.Notary_email.setText(str(case.notary_email))
-            for device in case.devices:
-                self.ui.Devices.addItem(device.name+' - '+device.description)
+            for evidence in case.evidences:
+                self.ui.Evidences.addItem(evidence.name+' - '+evidence.description)
 
     def accept(self):
         # Validate name
@@ -248,6 +248,9 @@ class NewOperatorDlg(QDialog):
             super().accept()
         else:
             criticalmessage(result, "Validation error")
+
+    def getusername(self):
+        return self.ui.Username.text()
 
 class PasswordDlg(QDialog):
     """New password dialog"""

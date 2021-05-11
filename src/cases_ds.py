@@ -21,7 +21,7 @@
 Cases info module
 """
 from datetime import datetime
-from yaml import full_load, dump
+from yaml import load, dump, Loader
 from evidences_ds import thisdevice
 
 cases = []
@@ -104,7 +104,9 @@ def load_cases():
     global cases
     try:
         with open("src/ds/cases.yaml") as file:
-            cases = full_load(file)
+            cases = load(file, Loader=Loader)
+            if not cases:
+                cases = []
     except:
         # TODO Manage exception
         print ("ERROR: cases_ds: load_cases")

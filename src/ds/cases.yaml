@@ -1,1 +1,34 @@
-[]
+- !!python/object:cases_ds.Case
+  caselog: []
+  description: "Informaci\xF3n filtrada a la competencia\t"
+  evidences:
+  - !!python/object:evidences_ds.Device
+    description: The device where PESADES is running
+    filename: ''
+    manufacturer: NA
+    model: NA
+    name: tfe
+    serial: NA
+    type: !!python/name:builtins.type ''
+  ext4: false
+  id_external: '1002'
+  incident_date: 2021-05-11 18:36:48.246588
+  name: "Informaci\xF3n filtrada"
+  notary_email: sadfsad@sad.ccom
+  notary_name: Notario
+  notary_phone: '+123123'
+  open_date: 2021-05-11 18:36:48.246570
+  storages: []
+- !!python/object:cases_ds.Case
+  caselog: []
+  description: "Caso de ejemplo de adquisici\xF3n forense con sistema experto"
+  evidences: []
+  ext4: false
+  id_external: '1001'
+  incident_date: 2021-05-11 18:44:52.057311
+  name: Caso de ejemplo
+  notary_email: 234@123.com
+  notary_name: Notario
+  notary_phone: '+3466666666'
+  open_date: 2021-05-11 18:44:52.057292
+  storages: []
